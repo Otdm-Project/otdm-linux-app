@@ -67,8 +67,11 @@ func generateKeys() (privateKey, publicKey string, err error) {
         return "", "", fmt.Errorf("failed to generate private key: %v", err)  
     }
 
+    // プライベート鍵のトリム処理をして不正な文字を排除
+    trimmedPrivKey := strings.TrimSpace(string(privKey))
+
     // 公開鍵生成のためのコマンド
-    pubCmd := exec.Command("bash", "-c", fmt.Sprintf("echo %s | wg pubkey", strings.TrimSpace(string(privKey))))
+    pubCmd := exec.Command("bash", "-c", fmt.Sprintf("echo %s | wg pubkey", trimmedPrivKey))
     pubKeyOutput, err := pubCmd.CombinedOutput()
     if err != nil {
         // 出力されたエラーメッセージを含める
