@@ -13,5 +13,10 @@ func RunUp() {
         return
     }
 	utils.CallBoot()
-	utils.CallNetwork()
+	// インターフェース名を指定してください
+    interfaceName := "otdm" 
+    if err := utils.ConfigureFirewall(interfaceName); err != nil {
+        fmt.Println("Error during firewall configuration:", err)
+        return
+    }
 }
