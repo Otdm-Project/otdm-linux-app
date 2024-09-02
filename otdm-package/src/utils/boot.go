@@ -7,6 +7,13 @@ import (
 
 // WireGuard トンネルの起動を行う関数
 func CallBoot() error {
+
+    //起動時ログ
+	err := LogMessage(INFO, "boot.go start")
+	if err != nil {
+		fmt.Printf("Failed to log message: %v\n", err)
+	}
+
     // ステップ 1: wg-quick を使用してトンネルを起動
     err := exec.Command("sudo", "wg-quick", "up", "config/otdm.conf").Run()
     if err != nil {
@@ -18,7 +25,12 @@ func CallBoot() error {
     if err != nil {
         return fmt.Errorf("Failed to enable wg-quick service: %v", err)
     }
-
+    // 処理終了時ログ
+    err := LogMessage(INFO, "boot.go done")
+	if err != nil {
+		fmt.Printf("Failed to log message: %v\n", err)
+	}
+    
     fmt.Println("WireGuard tunnel is up and enabled as a service.")
     return nil
 }

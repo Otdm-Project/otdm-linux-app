@@ -11,6 +11,13 @@ import (
 // その内容を削除した上で、VPNサービスを停止/無効化します。
 
 func CallRefresh() {
+
+	//起動時ログ
+	err := LogMessage(INFO, "refresh.go start")
+	if err != nil {
+		fmt.Printf("Failed to log message: %v\n", err)
+	}
+
 	configPath := "config/otdm.conf"  // 設定ファイルのパスを変数に格納
 	// ステップ1: 設定ファイルが存在するかを確認
 	if _, err := os.Stat(configPath); err == nil {
@@ -36,15 +43,19 @@ func CallRefresh() {
 	}
 }
 		// stopAndDisableTunnel は WireGuard トンネルを停止し、無効化するためのコマンドを実行します
-		func stopAndDisableTunnel() error {
-			// コマンド1: wg-quick を使ってトンネルを停止 (sudo 権限が必要)
-			if err := exec.Command("sudo", "wg-quick", "down", "config/otdm.conf").Run(); err != nil {
-				return fmt.Errorf("failed to execute wg-quick down: %v", err)
-			}
-		// コマンド2: systemctl を使ってサービスを無効化 (sudo 権限が必要)
-		if err := exec.Command("sudo", "systemctl", "disable", "wg-quick@otdm.conf").Run(); err != nil {
-			return fmt.Errorf("failed to disable wg-quick service: %v", err)
+	func stopAndDisableTunnel() error {
+		// コマンド1: wg-quick を使ってトンネルを停止 (sudo 権限が必要)
+		if err := exec.Command("sudo", "wg-quick", "down", "config/otdm.conf").Run(); err != nil {
+			return fmt.Errorf("failed to execute wg-quick down: %v", err)
 		}
-
-		return nil
+	// コマンド2: systemctl を使ってサービスを無効化 (sudo 権限が必要)
+	if err := exec.Command("sudo", "systemctl", "disable", "wg-quick@otdm.conf").Run(); err != nil {
+		return fmt.Errorf("failed to disable wg-quick service: %v", err)
+	}
+	// 処理終了時ログ
+    err := LogMessage(INFO, "refrash.go done")
+	if err != nil {
+		fmt.Printf("Failed to log message: %v\n", err)
+	}
+	return nil
 }

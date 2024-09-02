@@ -4,6 +4,7 @@ import (
     "fmt"
     "os/exec"
     "time"
+    "otdm-package/src/utils"
 )
 
 // CallWatchman は、トンネルが維持されているかを監視
@@ -38,9 +39,12 @@ func CallWatchman(serverIP string) {
             if !success {
                 fmt.Println("Tunnel is deemed unhealthy after three attempts.")
 
-                // ここにlogger.goに異常を伝える処理を入れる予定
-
-                // 異常と判断したのでトンネルを再試行、現段階ではlogger.goから呼び出されるが記載しません
+                // logger.goに異常を伝える処理
+                err := LogMessage(ERRO, "Tunnel is unhealthy. Attempting to reset.")
+                if err != nil {
+                    fmt.Printf("Failed to log message: %v\n", err)
+                }
+                // 異常と判断したのでトンネルを再試行、現段階
                 resetTunnel()
             }
 
