@@ -4,7 +4,7 @@ import (
     "fmt"
     "os/exec"
     "time"
-    "otdm-package/src/utils"
+    // "otdm-package/src/utils"
 )
 
 // CallWatchman は、トンネルが維持されているかを監視
@@ -45,7 +45,7 @@ func CallWatchman(serverIP string) {
                     fmt.Printf("Failed to log message: %v\n", err)
                 }
                 // 異常と判断したのでトンネルを再試行、現段階
-                resetTunnel()
+                 resetTunnel()
             }
 
         }

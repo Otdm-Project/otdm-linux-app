@@ -7,7 +7,8 @@ import (
 
 func RunUp() {
 	// 開始時ログ呼び出し
-	err := LogMessage(INFO, "otdm up start.")
+	var err error
+	err = utils.LogMessage(utils.INFO, "otdm up start.")
 	if err != nil {
 		fmt.Printf("Failed to log message: %v\n", err)
 	}
@@ -39,7 +40,7 @@ func RunUp() {
 	utils.CallWatchman(svIP)
 
 	//起動終了時ログ
-	err := LogMessage(INFO, "otdm up done.")
+	err = utils.LogMessage(utils.INFO, "otdm up done.")
 	if err != nil {
 		fmt.Printf("Failed to log message: %v\n", err)
 	}

@@ -11,12 +11,12 @@ import (
 
 // CallWebsocket 関数が各ステップを順に実行
 func CallWebsocket() error {
-
-    //起動時ログ
-	err := LogMessage(INFO, "websocket.go start")
-	if err != nil {
-		fmt.Printf("Failed to log message: %v\n", err)
-	}
+    // 起動時ログ
+    var err error
+    err = LogMessage(INFO, "websocket.go start")
+    if err != nil {
+        fmt.Printf("Failed to log message: %v\n", err)
+    }
 
     // ステップ1: 鍵の生成
     privateKey, publicKey, err := generateKeys()
@@ -41,6 +41,13 @@ func CallWebsocket() error {
     }
 
     fmt.Println("Configuration setup completed.")
+
+    // 処理終了時ログ
+    err = LogMessage(INFO, "websocket.go done")
+    if err != nil {
+        fmt.Printf("Failed to log message: %v\n", err)
+    }
+
     return nil
 }
 
@@ -123,7 +130,7 @@ AllowedIPs = <許可されたIPアドレス>
     newContent := string(content) + additionalPeer
 
     // 処理終了時ログ
-    err := LogMessage(INFO, "websocket.go done")
+    err = LogMessage(INFO, "websocket.go done")
 	if err != nil {
 		fmt.Printf("Failed to log message: %v\n", err)
 	}
