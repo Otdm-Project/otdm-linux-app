@@ -5,9 +5,17 @@ import (
     "os"
     "os/exec"
     "io/ioutil"
-	"strings"
-    // "github.com/gorilla/websocket"
+    "strings"
+    "github.com/gorilla/websocket"
+    "encoding/json"
 )
+
+type Data struct {
+    CvIP      string `json:"cvip"`
+    SvIP      string `json:"svip"`
+    OtdmPubKey string `json:"otdmpubkey"`
+    Domain    string `json:"domain"`
+}
 
 // CallWebsocket 関数が各ステップを順に実行
 func CallWebsocket() error {
@@ -31,8 +39,11 @@ func CallWebsocket() error {
         return fmt.Errorf("Failed to create/edit config: %v", err)
     }
 
-    // ステップ3: WebSocket 通信を確立して情報を取得 (ダミーデータ使用)
-    cvIP, svIP, otdmPubKey, domainName := getWebSocketData()
+    // ステップ3: WebSocket 通信を確立して情報を取得
+    cvIP, svIP, otdmPubKey, domainName, err := getWebSocketData()
+    if err != nil {
+        return fmt.Errorf("Failed to retrieve data via WebSocket: %v", err)
+    }
 
     // ステップ4: 取得した情報を設定ファイルに追記
     err = createOrEditConfig(privateKey, cvIP, svIP, otdmPubKey, domainName)
@@ -51,24 +62,31 @@ func CallWebsocket() error {
     return nil
 }
 
-// getWebSocketData はWebSocketを介してデータを取得する (ダミーデータを使用)
-func getWebSocketData() (cvIP, svIP, otdmPubKey, domainName string) {
-    // 実際のWebSocket接続コード（コメントアウト）
-    /*
-    c, _, err := websocket.DefaultDialer.Dial("ws://example.com/socket", nil)
+// getWebSocketData はWebSocketを介してデータを取得
+func getWebSocketData() (cvIP, svIP, otdmPubKey, domainName string, err error) {
+    // WebSocket サーバーのURL
+    url := "ws://172.20.1.21"
+
+    // WebSocket接続の確立
+    c, _, err := websocket.DefaultDialer.Dial(url, nil)
     if err != nil {
-        return "", "", "", "", fmt.Errorf("failed to connect websocket: %v", err)
+        return "", "", "", "", fmt.Errorf("failed to connect to websocket server: %v", err)
     }
     defer c.Close()
 
+    // メッセージの受信
     _, message, err := c.ReadMessage()
     if err != nil {
         return "", "", "", "", fmt.Errorf("failed to read message: %v", err)
     }
-    */
 
-    // ダミーデータの利用(テスト用)
-    return "192.168.1.2", "192.168.1.1", "dummyOtdmPublicKey", "example.com"
+    // 受信データの解析
+    var data Data
+    err = json.Unmarshal(message, &data)
+    if err != nil {
+        return "", "", "", "", fmt.Errorf("failed to parse JSON message: %v", err)
+    }
+    return data.CvIP, data.SvIP, data.OtdmPubKey, data.Domain, nil
 }
 
 // 鍵を生成する関数
@@ -105,7 +123,6 @@ func createOrEditConfig(privateKey, cvIP, svIP, otdmPubKey, domainName string) e
 [Interface]
 PrivateKey = %s
 Address = %s/24
-
 [Peer]
 PublicKey = %s
 Endpoint = %s:51820
