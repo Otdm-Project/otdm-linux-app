@@ -18,15 +18,16 @@ const (
 	ERRO
 )
 
-const logFilePath = "otdm-package/otdm-package.log"
-const maxLogLines = 1000
-
-// Mapでログレベルを文字列に変換
+// logLevelMap は LogLevel を文字列として表現するためのマップ
 var logLevelMap = map[LogLevel]string{
 	INFO: "INFO",
 	WARN: "WARN",
 	ERRO: "ERRO",
 }
+
+// logFilePath は絶対パスで /var/log に設定
+const logFilePath = "/var/log/otdm-package.log"
+const maxLogLines = 1000
 
 // LogMessage はメッセージとログレベルを受け取り、ログファイルに記録する
 func LogMessage(logLevel LogLevel, message string) error {
@@ -62,12 +63,14 @@ func LogMessage(logLevel LogLevel, message string) error {
 	}
 
 	// 新規ログをファイルに書き込む
-	file.WriteString(logEntry + "\n")
+	_, err = file.WriteString(logEntry + "\n")
+	if err != nil {
+		return fmt.Errorf("unable to write to log file: %v", err)
+	}
 
 	return nil
 }
 
-// rotateLogs は古いログを削除し、最大行数を維持する
 func rotateLogs() error {
 	input, err := os.ReadFile(logFilePath)
 	if err != nil {
