@@ -65,7 +65,7 @@ func CallWebsocket() error {
 // getWebSocketData はWebSocketを介してデータを取得
 func getWebSocketData() (cvIP, svIP, otdmPubKey, domainName string, err error) {
     // WebSocket サーバーのURL
-    url := "ws://172.20.1.21"
+    url := "ws://10.2.141.46:3000"
 
     // WebSocket接続の確立
     c, _, err := websocket.DefaultDialer.Dial(url, nil)
