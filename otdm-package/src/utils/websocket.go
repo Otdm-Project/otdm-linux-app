@@ -2,7 +2,7 @@ package utils
 
 import (
     "fmt"
-    "os"
+    //"os"
     "os/exec"
     "io/ioutil"
     "strings"
@@ -117,12 +117,12 @@ func generateKeys() (privateKey, publicKey string, err error) {
 func createOrEditConfig(privateKey, cvIP, svIP, otdmPubKey, domainName string) error {
     configPath := "config/otdm.conf"
 
-    // 初期ファイルの生成
-    if _, err := os.Stat(configPath); os.IsNotExist(err) {
-        template := fmt.Sprintf(`
+    // コンフィグテンプレートの全体
+    template := fmt.Sprintf(`
 [Interface]
 PrivateKey = %s
 Address = %s/24
+
 [Peer]
 PublicKey = %s
 Endpoint = %s:51820
@@ -130,27 +130,6 @@ AllowedIPs = %s/32
 PersistentKeepalive = 25
 `, privateKey, cvIP, otdmPubKey, domainName, svIP)
 
-        return ioutil.WriteFile(configPath, []byte(template), 0644)
-    }
-
-    // 既存ファイルの追記
-    additionalPeer := fmt.Sprintf(`
-[Peer]
-PublicKey = <対向の公開鍵>
-AllowedIPs = <許可されたIPアドレス>
-`)
-    content, err := ioutil.ReadFile(configPath)
-    if err != nil {
-        return fmt.Errorf("failed to read existing config: %v", err)
-    }
-
-    newContent := string(content) + additionalPeer
-
-    // 処理終了時ログ
-    err = LogMessage(INFO, "websocket.go done")
-	if err != nil {
-		fmt.Printf("Failed to log message: %v\n", err)
-	}
-
-    return ioutil.WriteFile(configPath, []byte(newContent), 0644)
+    // ファイルが存在しなくても、初期化したい場合でも一貫してテンプレートで上書き
+    return ioutil.WriteFile(configPath, []byte(template), 0644)
 }
