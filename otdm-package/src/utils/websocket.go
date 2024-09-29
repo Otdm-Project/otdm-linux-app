@@ -7,7 +7,7 @@ import (
     "io/ioutil"
     "strings"
     "github.com/gorilla/websocket"
-    "encoding/json"
+    //"encoding/json"
 )
 
 type Data struct {
@@ -65,28 +65,28 @@ func CallWebsocket() error {
 // getWebSocketData はWebSocketを介してデータを取得
 func getWebSocketData() (cvIP, svIP, otdmPubKey, domainName string, err error) {
     // WebSocket サーバーのURL
-    url := "ws://10.2.141.46:3000"
+    url := "ws://98.81.234.159:3000"
 
-    // WebSocket接続の確立
-    c, _, err := websocket.DefaultDialer.Dial(url, nil)
-    if err != nil {
-        return "", "", "", "", fmt.Errorf("failed to connect to websocket server: %v", err)
-    }
-    defer c.Close()
-
-    // メッセージの受信
-    _, message, err := c.ReadMessage()
-    if err != nil {
-        return "", "", "", "", fmt.Errorf("failed to read message: %v", err)
-    }
-
-    // 受信データの解析
-    var data Data
-    err = json.Unmarshal(message, &data)
-    if err != nil {
-        return "", "", "", "", fmt.Errorf("failed to parse JSON message: %v", err)
-    }
-    return data.CvIP, data.SvIP, data.OtdmPubKey, data.Domain, nil
+     // WebSocket接続の確立
+     c, _, err := websocket.DefaultDialer.Dial(url, nil)
+     if err != nil {
+         return "", "", "", "", fmt.Errorf("failed to connect to websocket server: %v", err)
+     }
+     defer c.Close()
+ 
+     // メッセージの受信
+     _, message, err := c.ReadMessage()
+     if err != nil {
+         return "", "", "", "", fmt.Errorf("failed to read message: %v", err)
+     }
+ 
+     // 平文メッセージを分割
+     parts := strings.Split(string(message), ",")
+     if len(parts) != 4 {
+         return "", "", "", "", fmt.Errorf("received message is not valid")
+     }
+ 
+     return parts[0], parts[1], parts[2], parts[3], nil
 }
 
 // 鍵を生成する関数
