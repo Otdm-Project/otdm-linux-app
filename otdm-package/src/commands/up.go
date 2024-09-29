@@ -37,7 +37,7 @@ func RunUp() {
 	// watchman.go呼び出し
 	// 仮のIP受け渡し
 	svIP := "192.168.1.2" 
-	utils.CallWatchman(svIP)
+	go utils.CallWatchman(svIP)
 
 	//起動終了時ログ
 	err = utils.LogMessage(utils.INFO, "otdm up done.")
