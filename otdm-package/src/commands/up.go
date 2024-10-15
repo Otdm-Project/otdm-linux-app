@@ -1,47 +1,49 @@
 package commands
 
 import (
-	"fmt"
-	"otdm-package/src/utils"
+    "fmt"
+    "otdm-package/src/utils"
 )
 
-func RunUp() {
-	// 開始時ログ呼び出し
-	var err error
-	err = utils.LogMessage(utils.INFO, "otdm up start.")
-	if err != nil {
-		fmt.Printf("Failed to log message: %v\n", err)
-	}
+// RunUpはWebSocketデータを受け取り、main.goに返す
+func RunUp() (cvIP, svIP, domainName string, err error) {
+    // err 変数は既に関数の返り値で宣言されているので、新たに宣言する必要はありません
 
-	// refresh.go呼び出し
-	utils.CallRefresh()
-
-	// websocket.go呼び出し
-    // CallWebsocket関数でWebSocket関連の処理を行います。
-    if err := utils.CallWebsocket(); err != nil {
-		fmt.Println("Error during WebSocket connection:", err)
-       	return
+    // WebSocketからのデータを受け取る
+    cvIP, svIP, domainName, err = utils.CallWebsocket()
+    if err != nil {
+        fmt.Printf("Error during WebSocket connection: %v\n", err)
+        return "", "", "", err
     }
 
-	// boot.go呼び出し
-	utils.CallBoot()
-	
-	// network.go呼び出し
-	// インターフェース名を指定
-    interfaceName := "otdm" 
-    if err := utils.ConfigureFirewall(interfaceName); err != nil {
-       	fmt.Println("Error during firewall configuration:", err)
-       	return
+    // 他の処理（例: CallRefresh, CallBoot など）
+    err = utils.CallRefresh()
+    if err != nil {
+        fmt.Printf("Error during refresh: %v\n", err)
+        return "", "", "", err
     }
 
-	// watchman.go呼び出し
-	// 仮のIP受け渡し
-	svIP := "192.168.1.2" 
-	go utils.CallWatchman(svIP)
+    err = utils.CallBoot()
+    if err != nil {
+        fmt.Printf("Error during boot: %v\n", err)
+        return "", "", "", err
+    }
 
-	//起動終了時ログ
-	err = utils.LogMessage(utils.INFO, "otdm up done.")
-	if err != nil {
-		fmt.Printf("Failed to log message: %v\n", err)
-	}
+    interfaceName := "otdm"
+    err = utils.ConfigureFirewall(interfaceName)
+    if err != nil {
+        fmt.Printf("Error during firewall configuration: %v\n", err)
+        return "", "", "", err
+    }
+
+    // トンネル健康状態の監視関連 (バックグラウンドで実行）
+    go utils.CallWatchman(svIP)
+
+    err = utils.LogMessage(utils.INFO, "otdm up done.")
+    if err != nil {
+        fmt.Printf("Failed to log message: %v\n", err)
+        return "", "", "", err
+    }
+
+    return cvIP, svIP, domainName, nil
 }

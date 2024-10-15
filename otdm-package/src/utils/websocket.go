@@ -18,37 +18,38 @@ type Data struct {
 }
 
 // CallWebsocket 関数が各ステップを順に実行
-func CallWebsocket() error {
+func CallWebsocket() (cvIP string, svIP string, domainName string, err error) {
     // 起動時ログ
-    var err error
+    //var err error
     err = LogMessage(INFO, "websocket.go start")
     if err != nil {
-        fmt.Printf("Failed to log message: %v\n", err)
+        return "", "", "", err
     }
+
 
     // ステップ1: 鍵の生成
     privateKey, publicKey, err := generateKeys()
     if err != nil {
-        return fmt.Errorf("Failed to generate keys: %v", err)
+        return "", "", "", fmt.Errorf("Failed to generate keys: %v", err)
     }
     fmt.Printf("Generated keys: private=%s, public=%s\n", privateKey, publicKey)
 
     // ステップ2: 初期設定ファイル作成
     err = createOrEditConfig(privateKey, "", "", "", "")
     if err != nil {
-        return fmt.Errorf("Failed to create/edit config: %v", err)
+        return "", "", "", fmt.Errorf("Failed to create/edit config: %v", err)
     }
 
     // ステップ3: WebSocket 通信を確立して情報を取得
     cvIP, svIP, otdmPubKey, domainName, err := getWebSocketData()
     if err != nil {
-        return fmt.Errorf("Failed to retrieve data via WebSocket: %v", err)
+        return "", "", "", fmt.Errorf("Failed to retrieve data via WebSocket: %v", err)
     }
 
     // ステップ4: 取得した情報を設定ファイルに追記
     err = createOrEditConfig(privateKey, cvIP, svIP, otdmPubKey, domainName)
     if err != nil {
-        return fmt.Errorf("Failed to update config with received data: %v", err)
+        return "", "", "", fmt.Errorf("Failed to update config with received data: %v", err)
     }
 
     fmt.Println("Configuration setup completed.")
@@ -59,13 +60,13 @@ func CallWebsocket() error {
         fmt.Printf("Failed to log message: %v\n", err)
     }
 
-    return nil
+    return cvIP, svIP, domainName, nil
 }
 
 // getWebSocketData はWebSocketを介してデータを取得
 func getWebSocketData() (cvIP, svIP, otdmPubKey, domainName string, err error) {
     // WebSocket サーバーのURL
-    url := "ws://98.81.234.159:3000"
+    url := "ws://3.93.146.222:3000"
 
      // WebSocket接続の確立
      c, _, err := websocket.DefaultDialer.Dial(url, nil)
