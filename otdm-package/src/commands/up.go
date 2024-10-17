@@ -17,11 +17,7 @@ func RunUp() (cvIP, svIP, domainName string, err error) {
     }
 
     // 他の処理（例: CallRefresh, CallBoot など）
-    err = utils.CallRefresh()
-    if err != nil {
-        fmt.Printf("Error during refresh: %v\n", err)
-        return "", "", "", err
-    }
+    utils.CallRefresh()
 
     err = utils.CallBoot()
     if err != nil {
