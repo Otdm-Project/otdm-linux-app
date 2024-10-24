@@ -41,7 +41,7 @@ func main() {
 
 	switch os.Args[1] {
 	case "up":
-		commands.RunUp()
+		//commands.RunUp()
 		// WebSocketからのデータを受け取る
 		cvIP, svIP, domainName, err = commands.RunUp()
 		if err != nil {

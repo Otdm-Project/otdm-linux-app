@@ -46,6 +46,15 @@ func CallWebsocket() (cvIP string, svIP string, domainName string, err error) {
         return "", "", "", fmt.Errorf("Failed to retrieve data via WebSocket: %v", err)
     }
 
+    // WebSocket通信を通じて情報を取得
+    // cvIP, svIP, otdmPubKey, domainName, err = getWebSocketData()
+    // if err != nil {
+    //    return "", "", "", fmt.Errorf("Failed to retrieve data via WebSocket: %v", err)
+    // }
+
+    // ダミーデータの使用
+    cvIP, svIP, otdmPubKey, domainName = "192.168.1.10", "10.0.0.1", "otdmPubKey", "otdm.dev"
+
     // ステップ4: 取得した情報を設定ファイルに追記
     err = createOrEditConfig(privateKey, cvIP, svIP, otdmPubKey, domainName)
     if err != nil {
@@ -86,7 +95,7 @@ func getWebSocketData() (cvIP, svIP, otdmPubKey, domainName string, err error) {
      if len(parts) != 4 {
          return "", "", "", "", fmt.Errorf("received message is not valid")
      }
- 
+     
      return parts[0], parts[1], parts[2], parts[3], nil
 }
 
