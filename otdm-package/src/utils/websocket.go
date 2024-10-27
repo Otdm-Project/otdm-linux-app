@@ -2,55 +2,47 @@ package utils
 
 import (
     "fmt"
-    //"os"
+    "os"
     "os/exec"
+    "path/filepath"
     "io/ioutil"
     "strings"
     "github.com/gorilla/websocket"
     //"encoding/json"
 )
 
-type Data struct {
-    CvIP      string `json:"cvip"`
-    SvIP      string `json:"svip"`
-    OtdmPubKey string `json:"otdmpubkey"`
-    Domain    string `json:"domain"`
-}
 
 // CallWebsocket 関数が各ステップを順に実行
-func CallWebsocket() (cvIP string, svIP string, domainName string, err error) {
+func CallWebsocket() (cvIP string, svIP string, otdmPubKey string,domainName string, err error) {
     // 起動時ログ
     //var err error
     err = LogMessage(INFO, "websocket.go start")
     if err != nil {
-        return "", "", "", err
+        return "", "", "", "", err
     }
 
 
     // ステップ1: 鍵の生成
     privateKey, publicKey, err := generateKeys()
     if err != nil {
-        return "", "", "", fmt.Errorf("Failed to generate keys: %v", err)
+        return "", "", "", "", fmt.Errorf("Failed to generate keys: %v", err)
     }
     fmt.Printf("Generated keys: private=%s, public=%s\n", privateKey, publicKey)
 
     // ステップ2: 初期設定ファイル作成
+    const confFilePath = "/etc/wireguard/otdm.conf"
     err = createOrEditConfig(privateKey, "", "", "", "")
     if err != nil {
-        return "", "", "", fmt.Errorf("Failed to create/edit config: %v", err)
+        return "", "", "", "", fmt.Errorf("Failed to create/edit config: %v", err)
     }
 
     // ステップ3: WebSocket 通信を確立して情報を取得
+    /*
     cvIP, svIP, otdmPubKey, domainName, err := getWebSocketData()
     if err != nil {
-        return "", "", "", fmt.Errorf("Failed to retrieve data via WebSocket: %v", err)
+        return "", "", "", "", fmt.Errorf("Failed to retrieve data via WebSocket: %v", err)
     }
-
-    // WebSocket通信を通じて情報を取得
-    // cvIP, svIP, otdmPubKey, domainName, err = getWebSocketData()
-    // if err != nil {
-    //    return "", "", "", fmt.Errorf("Failed to retrieve data via WebSocket: %v", err)
-    // }
+        */
 
     // ダミーデータの使用
     cvIP, svIP, otdmPubKey, domainName = "192.168.1.10", "10.0.0.1", "otdmPubKey", "otdm.dev"
@@ -58,7 +50,7 @@ func CallWebsocket() (cvIP string, svIP string, domainName string, err error) {
     // ステップ4: 取得した情報を設定ファイルに追記
     err = createOrEditConfig(privateKey, cvIP, svIP, otdmPubKey, domainName)
     if err != nil {
-        return "", "", "", fmt.Errorf("Failed to update config with received data: %v", err)
+        return "", "", "", "", fmt.Errorf("Failed to update config with received data: %v", err)
     }
 
     fmt.Println("Configuration setup completed.")
@@ -69,7 +61,7 @@ func CallWebsocket() (cvIP string, svIP string, domainName string, err error) {
         fmt.Printf("Failed to log message: %v\n", err)
     }
 
-    return cvIP, svIP, domainName, nil
+    return cvIP, svIP, otdmPubKey, domainName, nil
 }
 
 // getWebSocketData はWebSocketを介してデータを取得
@@ -125,7 +117,15 @@ func generateKeys() (privateKey, publicKey string, err error) {
 
 // otdm.confを必要なら生成または編集する
 func createOrEditConfig(privateKey, cvIP, svIP, otdmPubKey, domainName string) error {
-    configPath := "config/otdm.conf"
+    // 設定ファイルのパスを /etc/wireguard/ に固定
+	configPath := filepath.Join("/etc/wireguard", "otdm.conf")
+
+	// /etc/wireguard ディレクトリが存在するか確認し、なければ作成
+	if _, err := os.Stat("/etc/wireguard"); os.IsNotExist(err) {
+		if err := os.Mkdir("/etc/wireguard", 0755); err != nil {
+			return fmt.Errorf("failed to create directory /etc/wireguard: %v", err)
+		}
+	}
 
     // コンフィグテンプレートの全体
     template := fmt.Sprintf(`

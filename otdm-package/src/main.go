@@ -9,7 +9,7 @@ import (
 
 // グローバルにデータを保持する変数宣言
 var (
-	cvIP, svIP, domainName string
+	cvIP, svIP, otdmPubKey, domainName string
 )
 
 // バージョン情報の定義
@@ -41,9 +41,9 @@ func main() {
 
 	switch os.Args[1] {
 	case "up":
-		//commands.RunUp()
+
 		// WebSocketからのデータを受け取る
-		cvIP, svIP, domainName, err = commands.RunUp()
+		cvIP, svIP, otdmPubKey, domainName, err = commands.RunUp()
 		if err != nil {
 			fmt.Printf("Error during up: %v\n", err)
 		}
