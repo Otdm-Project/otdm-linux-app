@@ -12,7 +12,9 @@ func RunUp() (cvIP, svIP, otdmPubKey, domainName string, err error) {
     // WebSocketからのデータを受け取る
     cvIP, svIP, otdmPubKey, domainName, err = utils.CallWebsocket()
     if err != nil {
-        fmt.Printf("Error during WebSocket connection: %v\n", err)
+        //fmt.Printf("Error during WebSocket connection: %v\n", err)
+        errMessage := fmt.Sprintf("Error during WebSocket connection: %v", err)
+		utils.ErrLogMessage(errMessage)
         return "", "", "", "", err
     }
 
@@ -21,14 +23,18 @@ func RunUp() (cvIP, svIP, otdmPubKey, domainName string, err error) {
 
     err = utils.CallBoot()
     if err != nil {
-        fmt.Printf("Error during boot: %v\n", err)
+        //fmt.Printf("Error during boot: %v\n", err)
+        errMessage := fmt.Sprintf("Error during boot: %v%v", err)
+		utils.ErrLogMessage(errMessage)
         return "", "", "", "", err
     }
 
     interfaceName := "otdm"
     err = utils.ConfigureFirewall(interfaceName)
     if err != nil {
-        fmt.Printf("Error during firewall configuration: %v\n", err)
+        //fmt.Printf("Error during firewall configuration: %v\n", err)
+        errMessage := fmt.Sprintf("Error during firewall configuration:", err)
+		utils.ErrLogMessage(errMessage)
         return "", "", "", "", err
     }
 
@@ -37,7 +43,9 @@ func RunUp() (cvIP, svIP, otdmPubKey, domainName string, err error) {
 
     err = utils.LogMessage(utils.INFO, "otdm up done.")
     if err != nil {
-        fmt.Printf("Failed to log message: %v\n", err)
+        //fmt.Printf("Failed to log message: %v\n", err)
+        errMessage := fmt.Sprintf("Failed to log message: %v\n", err)
+		utils.ErrLogMessage(errMessage)
         return "", "", "", "", err
     }
     return cvIP, svIP, otdmPubKey, domainName, nil

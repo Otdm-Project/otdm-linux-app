@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/user"
+	"os/exec"
 	"strings"
 	"time"
 )
@@ -87,8 +88,8 @@ func rotateLogs() error {
 	return os.WriteFile(logFilePath, []byte(newContent), 0644)
 }
 
-func ErrLogMessage(errmessage string) error {
-	cmd := exec.Command("logger","-p", "user.err", message)
+func ErrLogMessage(errMessage string) error {
+	cmd := exec.Command("logger","-p", "user.err", errMessage)
 	if err := cmd.Run(); err != nil {
         fmt.Printf("failed to send to journal: %v\n", err)
     }

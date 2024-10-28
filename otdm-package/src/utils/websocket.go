@@ -18,6 +18,8 @@ func CallWebsocket() (cvIP string, svIP string, otdmPubKey string,domainName str
     //var err error
     err = LogMessage(INFO, "websocket.go start")
     if err != nil {
+        errMessage := fmt.Sprintf("Failed to websocket.go start: %v\n", err)
+		utils.ErrLogMessage(errMessage)
         return "", "", "", "", err
     }
 
@@ -25,6 +27,8 @@ func CallWebsocket() (cvIP string, svIP string, otdmPubKey string,domainName str
     // ステップ1: 鍵の生成
     privateKey, publicKey, err := generateKeys()
     if err != nil {
+        errMessage := fmt.Sprintf("Failed to generate keys: %v\n", err)
+		utils.ErrLogMessage(errMessage)
         return "", "", "", "", fmt.Errorf("Failed to generate keys: %v", err)
     }
     fmt.Printf("Generated keys: private=%s, public=%s\n", privateKey, publicKey)
