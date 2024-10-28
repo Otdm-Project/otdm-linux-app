@@ -86,3 +86,11 @@ func rotateLogs() error {
 	newContent := strings.Join(lines[len(lines)-maxLogLines:], "\n")
 	return os.WriteFile(logFilePath, []byte(newContent), 0644)
 }
+
+func ErrLogMessage(errmessage string) error {
+	cmd := exec.Command("logger","-p", "user.err", message)
+	if err := cmd.Run(); err != nil {
+        fmt.Printf("failed to send to journal: %v\n", err)
+    }
+	return nil
+}

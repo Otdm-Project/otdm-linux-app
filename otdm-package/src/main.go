@@ -34,11 +34,6 @@ func main() {
         	os.Exit(1)
     	}
 
-	if len(os.Args) < 2 {
-		fmt.Println("Usage: otdm <command>")
-		os.Exit(1)
-	}
-
 	switch os.Args[1] {
 	case "up":
 
