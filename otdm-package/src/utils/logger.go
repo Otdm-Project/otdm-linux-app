@@ -36,7 +36,9 @@ func LogMessage(logLevel LogLevel, message string) error {
 	currentTime := time.Now().Format("Jan 02 2006 15:04:05")
 	user, err := user.Current()
 	if err != nil {
-		return fmt.Errorf("unable to get current user: %v", err)
+		errMessage := fmt.Sprintf("unable to get current user: %v\n", err)
+        ErrLogMessage(errMessage)
+		return err
 	}
 
 	// ログメッセージを構築
@@ -45,7 +47,9 @@ func LogMessage(logLevel LogLevel, message string) error {
 	// ログファイルを開く（追記モード）
 	file, err := os.OpenFile(logFilePath, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
-		return fmt.Errorf("unable to open log file: %v", err)
+		errMessage := fmt.Sprintf("unable to open log file: %v\n", err)
+        ErrLogMessage(errMessage)
+		return err
 	}
 	defer file.Close()
 
@@ -59,14 +63,18 @@ func LogMessage(logLevel LogLevel, message string) error {
 	// 古いログを削除して最大行数を維持
 	if lines >= maxLogLines {
 		if err := rotateLogs(); err != nil {
-			return fmt.Errorf("unable to rotate logs: %v", err)
+			errMessage := fmt.Sprintf("unable to rotate logs: %v\n", err)
+        	ErrLogMessage(errMessage)
+			return err
 		}
 	}
 
 	// 新規ログをファイルに書き込む
 	_, err = file.WriteString(logEntry + "\n")
 	if err != nil {
-		return fmt.Errorf("unable to write to log file: %v", err)
+		errMessage := fmt.Sprintf("unable to write to log file: %v\n", err)
+        ErrLogMessage(errMessage)
+		return err
 	}
 
 	return nil
@@ -91,6 +99,7 @@ func rotateLogs() error {
 func ErrLogMessage(errMessage string) error {
 	cmd := exec.Command("logger","-p", "user.err", errMessage)
 	if err := cmd.Run(); err != nil {
+		
         fmt.Printf("failed to send to journal: %v\n", err)
     }
 	return nil
