@@ -15,7 +15,6 @@ import (
 // CallWebsocket 関数が各ステップを順に実行
 func CallWebsocket() (cvIP string, svIP string, otdmPubKey string, domainName string, err error) {
     // 起動時ログ
-    //var err error
     err = LogMessage(INFO, "websocket.go start")
     if err != nil {
         errMessage := fmt.Sprintf("Failed to websocket.go start: %v\n", err)
@@ -43,17 +42,17 @@ func CallWebsocket() (cvIP string, svIP string, otdmPubKey string, domainName st
     }
 
     // ステップ3: WebSocket 通信を確立して情報を取得
-    /*
-    cvIP, svIP, otdmPubKey, domainName, err := getWebSocketData()
+    
+    getWebSocketData()
     if err != nil {
         errMessage := fmt.Sprintf("Failed to retrieve data via WebSocket: %v\n", err)
         ErrLogMessage(errMessage)
         return "", "", "", "", err
     }
-        */
+    
 
     // ダミーデータの使用
-    cvIP, svIP, otdmPubKey, domainName = "192.168.1.10", "10.0.0.1", "otdmPubKey", "otdm.dev"
+    cvIP, svIP, otdmPubKey, domainName = "192.168.1.10", "10.0.0.1", "testcodeKey", "otdm.dev"
 
     // ステップ4: 取得した情報を設定ファイルに追記
     err = createOrEditConfig(privateKey, cvIP, svIP, otdmPubKey, domainName)
@@ -87,7 +86,7 @@ func getWebSocketData() (cvIP, svIP, otdmPubKey, domainName string, err error) {
     defer c.Close()
 
     // 公開鍵をWebSocketを通じて送信
-    err = c.WriteMessage(websocket.TextMessage, []byte(publicKey))
+    err = c.WriteMessage(websocket.TextMessage, []byte(otdmPubKey))
     if err != nil {
         errMessage := fmt.Sprintf("failed to send public key: %v\n", err)
         ErrLogMessage(errMessage)
