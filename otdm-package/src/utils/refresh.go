@@ -18,7 +18,7 @@ func CallRefresh() {
 		fmt.Printf("Failed to log message: %v\n", err)
 	}
 
-	configPath := "config/otdm.conf"  // 設定ファイルのパスを変数に格納
+	configPath := "/etc/wireguard/otdm.conf"  // 設定ファイルのパスを変数に格納
 	// ステップ1: 設定ファイルが存在するかを確認
 	if _, err := os.Stat(configPath); err == nil {
 		fmt.Println("Config file exists. Clearing contents.")

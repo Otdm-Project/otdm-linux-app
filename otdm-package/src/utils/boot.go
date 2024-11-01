@@ -15,7 +15,7 @@ func CallBoot() error {
     }
 
     // ステップ1: wg-quick を使用してトンネルを起動
-    err = exec.Command("sudo", "wg-quick", "up", "config/otdm.conf").Run()
+    err = exec.Command("sudo", "wg-quick", "up", "/etc/wireguard/otdm.conf").Run()
     if err != nil {
         return fmt.Errorf("Failed to execute wg-quick up: %v", err)
     }
