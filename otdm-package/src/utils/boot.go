@@ -5,6 +5,23 @@ import (
     "os/exec"
 )
 
+type Status struct {
+    ClientIP   string `json:"client_ip"`
+    ServerIP   string `json:"server_ip"`
+    DomainName string `json:"domain_name"`
+}
+
+func saveStatusToFile(status Status) error {
+    file, err := os.Create("")
+    if err != nil {
+        return err
+    }
+    defer file.Close()
+
+    encoder := json.NewEncoder(file)
+    return encoder.Encode(status)
+}
+
 // WireGuard トンネルの起動を行う関数
 func CallBoot() error {
     // 起動時ログ

@@ -11,11 +11,13 @@ import (
     //"encoding/json"
 )
 
+const confFilePath = "/etc/wireguard/otdm.conf"
 
 // CallWebsocket 関数が各ステップを順に実行
 func CallWebsocket() (cvIP string, svIP string, otdmPubKey string, domainName string, err error) {
     // 起動時ログ
     err = LogMessage(INFO, "websocket.go start")
+    fmt.Printf("websocket.go start: %v\n", err)
     if err != nil {
         errMessage := fmt.Sprintf("Failed to websocket.go start: %v\n", err)
 		ErrLogMessage(errMessage)
@@ -25,22 +27,24 @@ func CallWebsocket() (cvIP string, svIP string, otdmPubKey string, domainName st
 
     // ステップ1: 鍵の生成
     privateKey, publicKey, err := generateKeys()
+    fmt.Printf("genkey: %v\n", err)
     if err != nil {
         errMessage := fmt.Sprintf("Failed to generate keys: %v\n", err)
 		ErrLogMessage(errMessage)
         return "", "", "", "", err
     }
     fmt.Printf("Generated keys: private=%s, public=%s\n", privateKey, publicKey)
+    fmt.Printf("genkey`s done: %v\n", err)
 
     // ステップ2: 初期設定ファイル作成
-    const confFilePath = "/etc/wireguard/otdm.conf"
+    fmt.Printf("config start: %v\n", err)
     err = createOrEditConfig(privateKey, "", "", "", "")
     if err != nil {
         errMessage := fmt.Sprintf("Failed to create/edit config: %v\n", err)
         ErrLogMessage(errMessage)
         return "", "", "", "", err
     }
-
+    fmt.Printf("config done: %v\n", err)
     // ステップ3: WebSocket 通信を確立して情報を取得
     
     getWebSocketData()
@@ -75,6 +79,7 @@ func CallWebsocket() (cvIP string, svIP string, otdmPubKey string, domainName st
 
 // getWebSocketData はWebSocketを介してデータを取得
 func getWebSocketData() (cvIP, svIP, otdmPubKey, domainName string, err error) {
+    fmt.Printf("get web socketdata start : %v\n", err)
     // WebSocket サーバーのURL
     url := "ws://18.207.194.4:3000"
     c, _, err := websocket.DefaultDialer.Dial(url, nil)
