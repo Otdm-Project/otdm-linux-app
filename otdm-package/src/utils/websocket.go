@@ -185,8 +185,7 @@ PersistentKeepalive = 25
 
 // createStatusJSON は取得したデータをJSON形式で/tmpに保存
 func createStatusJSON(cvIP, svIP, otdmPubKey, domainName string) error {
-    pid := os.Getpid()
-    fileName := filepath.Join("/tmp", fmt.Sprintf("status_%d.json", pid))
+    fileName := filepath.Join("/tmp", fmt.Sprintf("otdm_status.json"))
     
     file, err := os.Create(fileName)
     if err != nil {

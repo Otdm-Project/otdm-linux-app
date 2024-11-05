@@ -9,6 +9,10 @@ import (
 
 // CallWatchman は、トンネルが維持されているかを監視
 func CallWatchman(serverIP string) {
+    err := LogMessage(INFO, "watchman.go start")
+	if err != nil {
+		fmt.Printf("Failed to log message: %v\n", err)
+	}
     ticker := time.NewTicker(5 * time.Minute) // 5分ごとに監視サイクルを開始
     defer ticker.Stop()
 
@@ -50,6 +54,10 @@ func CallWatchman(serverIP string) {
 
         }
     }
+    err = LogMessage(INFO, "watchman.go done")
+	if err != nil {
+		fmt.Printf("Failed to log message: %v\n", err)
+	}
 }
 
 // resetTunnel 関数はトンネルを再起動します

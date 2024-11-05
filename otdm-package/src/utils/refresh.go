@@ -11,7 +11,6 @@ import (
 // その内容を削除した上で、VPNサービスを停止/無効化します。
 
 func CallRefresh() {
-
 	//起動時ログ
 	err := LogMessage(INFO, "refresh.go start")
 	if err != nil {
@@ -41,6 +40,10 @@ func CallRefresh() {
 	} else {
 		fmt.Println("Config file does not exist or cannot be accessed.")
 	}
+	err = LogMessage(INFO, "refrash.go done")
+	if err != nil {
+		fmt.Printf("Failed to log message: %v\n", err)
+	}
 }
 		// stopAndDisableTunnel は WireGuard トンネルを停止し、無効化するためのコマンドを実行します
 	func stopAndDisableTunnel() error {
@@ -53,9 +56,6 @@ func CallRefresh() {
 		return fmt.Errorf("failed to disable wg-quick service: %v", err)
 	}
 	// 処理終了時ログ
-    err := LogMessage(INFO, "refrash.go done")
-	if err != nil {
-		fmt.Printf("Failed to log message: %v\n", err)
-	}
+	
 	return nil
 }
