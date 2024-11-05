@@ -8,7 +8,6 @@ import (
     "io/ioutil"
     "strings"
     "github.com/gorilla/websocket"
-    //"encoding/json"
 )
 
 const confFilePath = "/etc/wireguard/otdm.conf"
@@ -46,14 +45,14 @@ func CallWebsocket() (cvIP string, svIP string, otdmPubKey string, domainName st
     }
     fmt.Printf("config done: %v\n", err)
     // ステップ3: WebSocket 通信を確立して情報を取得
-    
+    /*
     getWebSocketData()
     if err != nil {
         errMessage := fmt.Sprintf("Failed to retrieve data via WebSocket: %v\n", err)
         ErrLogMessage(errMessage)
         return "", "", "", "", err
     }
-    
+    */
 
     // ダミーデータの使用
     cvIP, svIP, otdmPubKey, domainName = "192.168.1.10", "10.0.0.1", "testcodeKey", "otdm.dev"
@@ -66,6 +65,14 @@ func CallWebsocket() (cvIP string, svIP string, otdmPubKey string, domainName st
         return "", "", "", "", err
     }
     fmt.Println("Configuration setup completed.")
+
+    // ステップ5: JSONファイルを/tmpに作成
+    err = createStatusJSON(cvIP, svIP, otdmPubKey, domainName)
+    if err != nil{
+        errMessage := fmt.Sprintf("Failed to create status JSON file: %v\n", err)
+        ErrLogMessage(errMessage)
+        return "", "", "", "", err
+    }
 
     // 処理終了時ログ
     err = LogMessage(INFO, "websocket.go done")
@@ -174,4 +181,26 @@ PersistentKeepalive = 25
 
     // ファイルが存在しなくても、初期化したい場合でも一貫してテンプレートで上書き
     return ioutil.WriteFile(configPath, []byte(template), 0644)
+}
+
+// createStatusJSON は取得したデータをJSON形式で/tmpに保存
+func createStatusJSON(cvIP, svIP, otdmPubKey, domainName string) error {
+    pid := os.Getpid()
+    fileName := filepath.Join("/tmp", fmt.Sprintf("status_%d.json", pid))
+    
+    file, err := os.Create(fileName)
+    if err != nil {
+        return err
+    }
+    defer file.Close()
+    
+    jsonData := fmt.Sprintf(`{
+        "ClientIP": "%s",
+        "ServerIP": "%s",
+        "PublicKey": "%s",
+        "Domain": "%s"
+    }`, cvIP, svIP, otdmPubKey, domainName)
+    
+    _, err = file.WriteString(jsonData)
+    return err
 }

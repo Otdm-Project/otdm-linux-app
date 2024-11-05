@@ -17,7 +17,6 @@ var (
 const Version = "0.0.1"
 
 func main() {
-
 	// rootユーザーか確認
 	usr, err := user.Current()
 	if err != nil {
@@ -54,7 +53,7 @@ func main() {
 				utils.ErrLogMessage(errMessage)
         }
 	case "status":
-		commands.ShowStatus(cvIP,svIP,domainName)
+		commands.ShowStatus()
 	case "version":
 		fmt.Println("otdm version : ", Version)
 	default:

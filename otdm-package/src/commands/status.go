@@ -1,20 +1,53 @@
 package commands
 
-import "fmt"
+import (
+    "encoding/json"
+    "fmt"
+    "io/ioutil"
+    "os"
+)
 
-// ShowStatus 関数で現在の状態を表示
-func ShowStatus(cvIP, svIP, domainName string) {
-	// トンネルの接続状況を取得
-	tunnelStatus := checkTunnelStatus()
-
-	fmt.Printf("Client IP: %s\n", cvIP)
-	fmt.Printf("Server IP: %s\n", svIP)
-	fmt.Printf("Domain: %s\n", domainName)
-	fmt.Printf("Tunnel Status: %s\n", tunnelStatus)
+// StatusData はJSONファイルの内容を保持するための構造体
+type StatusData struct {
+    CvIP      string `json:"cvIP"`
+    SvIP      string `json:"svIP"`
+    OtdmPubKey string `json:"otdmPubKey"`
+    DomainName string `json:"domainName"`
 }
 
-// checkTunnelStatus ではダミーでトンネル状態を返す。実際の実装では、具体的に確認する手段を持つ。
-func checkTunnelStatus() string {
-	// ここでは仮に接続されている状態にする。実際の接続状況を取得するロジックを追加可能。
-	return "connection"
+// ShowStatus は /tmp/status.json の内容をCLI上に表示する
+func ShowStatus() error {
+    jsonFilePath := "/tmp/status.json"
+
+    // JSONファイルを開く
+    file, err := os.Open(jsonFilePath)
+    if err != nil {
+        fmt.Printf("Failed to open JSON file: %v\n", err)
+        return err
+    }
+    defer file.Close()
+
+    // JSONファイルの内容を読み込む
+    byteValue, err := ioutil.ReadAll(file)
+    if err != nil {
+        fmt.Printf("Failed to read JSON file: %v\n", err)
+        return err
+    }
+
+    // JSONデータを構造体にデコードする
+    var status StatusData
+    err = json.Unmarshal(byteValue, &status)
+    if err != nil {
+        fmt.Printf("Failed to parse JSON file: %v\n", err)
+        return err
+    }
+
+    // JSONデータを表示する
+    fmt.Println("Current Status:")
+    fmt.Printf("Client Virtual IP (cvIP): %s\n", status.CvIP)
+    fmt.Printf("Server IP (svIP): %s\n", status.SvIP)
+    fmt.Printf("OTDM Public Key: %s\n", status.OtdmPubKey)
+    fmt.Printf("Domain Name: %s\n", status.DomainName)
+
+    return nil
 }

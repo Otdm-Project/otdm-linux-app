@@ -9,6 +9,7 @@ import (
 func RunUp() (cvIP, svIP, otdmPubKey, domainName string, err error) {
     // err 変数は既に関数の返り値で宣言されているので、新たに宣言する必要はありません
     err = utils.LogMessage(utils.INFO, "up.go start")
+    utils.CallRefresh()
     // WebSocketからのデータを受け取る
     cvIP, svIP, otdmPubKey, domainName, err = utils.CallWebsocket()
     if err != nil {
@@ -19,7 +20,6 @@ func RunUp() (cvIP, svIP, otdmPubKey, domainName string, err error) {
     }
 
     // 他の処理（例: CallRefresh, CallBoot など）
-    utils.CallRefresh()
 
     err = utils.CallBoot()
     if err != nil {
