@@ -12,6 +12,12 @@ sudo cp otdm /usr/local/bin/
 ```
 でコマンドを実行できるようにする。
 
+### ジャーナルの確認
+```
+journalctl -t otdm-package
+```
+で可能
+
 ### 開発中使用
 - make コマンド
 - go言語

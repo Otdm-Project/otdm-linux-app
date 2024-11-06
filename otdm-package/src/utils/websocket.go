@@ -55,7 +55,7 @@ func CallWebsocket() (cvIP string, svIP string, otdmPubKey string, domainName st
     */
 
     // ダミーデータの使用
-    cvIP, svIP, otdmPubKey, domainName = "192.168.1.10", "10.0.0.1", "testcodeKey", "otdm.dev"
+    cvIP, svIP, otdmPubKey, domainName = "192.168.1.10", "169.254.253.253", "testcodeKey", "otdm.dev"
 
     // ステップ4: 取得した情報を設定ファイルに追記
     err = createOrEditConfig(privateKey, cvIP, svIP, otdmPubKey, domainName)
