@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"os/user"
 	"os/exec"
+	"os/user"
 	"strings"
 	"time"
 )
@@ -37,7 +37,7 @@ func LogMessage(logLevel LogLevel, message string) error {
 	user, err := user.Current()
 	if err != nil {
 		errMessage := fmt.Sprintf("unable to get current user: %v\n", err)
-        ErrLogMessage(errMessage)
+		err = LogMessage(ERRO, errMessage)
 		return err
 	}
 
@@ -48,7 +48,7 @@ func LogMessage(logLevel LogLevel, message string) error {
 	file, err := os.OpenFile(logFilePath, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
 		errMessage := fmt.Sprintf("unable to open log file: %v\n", err)
-        ErrLogMessage(errMessage)
+		err = LogMessage(ERRO, errMessage)
 		return err
 	}
 	defer file.Close()
@@ -64,7 +64,7 @@ func LogMessage(logLevel LogLevel, message string) error {
 	if lines >= maxLogLines {
 		if err := rotateLogs(); err != nil {
 			errMessage := fmt.Sprintf("unable to rotate logs: %v\n", err)
-        	ErrLogMessage(errMessage)
+			err = LogMessage(ERRO, errMessage)
 			return err
 		}
 	}
@@ -73,7 +73,7 @@ func LogMessage(logLevel LogLevel, message string) error {
 	_, err = file.WriteString(logEntry + "\n")
 	if err != nil {
 		errMessage := fmt.Sprintf("unable to write to log file: %v\n", err)
-        ErrLogMessage(errMessage)
+		err = LogMessage(ERRO, errMessage)
 		return err
 	}
 
@@ -97,10 +97,10 @@ func rotateLogs() error {
 }
 
 func ErrLogMessage(errMessage string) error {
-	cmd := exec.Command("logger","-p", "otdm-package", errMessage)
-	fmt.Printf("journal code boot done: %v\n",err)
+	cmd := exec.Command("logger", "-p", "otdm-package", errMessage)
+	fmt.Printf("journal code boot done:\n")
 	if err := cmd.Run(); err != nil {
-        fmt.Printf("failed to send to journal: %v\n", err)
-    }
+		fmt.Printf("failed to send to journal: %v\n", err)
+	}
 	return nil
 }

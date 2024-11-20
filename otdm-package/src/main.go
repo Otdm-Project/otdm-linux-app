@@ -1,11 +1,11 @@
 package main
 
 import (
-		"fmt"
-		"os"
-		"os/user"
-		"otdm-package/src/commands"
-		"otdm-package/src/utils"
+	"fmt"
+	"os"
+	"os/user"
+	"otdm-package/src/commands"
+	"otdm-package/src/utils"
 )
 
 // グローバルにデータを保持する変数宣言
@@ -47,15 +47,19 @@ func main() {
 			utils.ErrLogMessage(errMessage)
 		}
 	case "down":
-        if err := commands.RunDown(); err != nil {
-           		//fmt.Println("Error during down:", err)
-				errMessage := fmt.Sprintf("Error during down:%v", err)
-				utils.ErrLogMessage(errMessage)
-        }
+		if err := commands.RunDown(); err != nil {
+			//fmt.Println("Error during down:", err)
+			errMessage := fmt.Sprintf("Error during down:%v", err)
+			utils.ErrLogMessage(errMessage)
+		}
 	case "status":
 		commands.ShowStatus()
 	case "version":
 		fmt.Println("otdm version : ", Version)
+	case "help":
+		if err := commands.ShowHelp(); err != nil {
+			fmt.Println("Error displaying help:", err)
+		}
 	default:
 		fmt.Println("Unknown command:", os.Args[1])
 	}
