@@ -105,7 +105,7 @@ func getWebSocketData(otdmPubKey string) (cvIP, svIP, otdmPubKeyResult, domainNa
 	fmt.Printf("get web socket data start\n")
 
 	// WebSocketサーバーのURL
-	url := "ws://<サーバーのIP>:3000"
+	url := "ws://api.otdm.dev:8080"
 	c, _, err := websocket.DefaultDialer.Dial(url, nil)
 	if err != nil {
 		fmt.Printf("failed to connect to websocket server: %v\n", err)
