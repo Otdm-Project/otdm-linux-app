@@ -8,19 +8,20 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
 
 const confFilePath = "/etc/wireguard/otdm.conf"
-const webscketURL = ""
+const webscketURL = "ws://api.otdm.dev:8080"
 
 // メッセージ1の構造体
 type WebSocketResponse struct {
 	ClientPublicKey string `json:"client_public_key"`
 	ServerPublicKey string `json:"server_public_key"`
-	VpnIpClient     string `json:"vpn_ip_client"`
-	VpnIpServer     string `json:"vpn_ip_server"`
+	ClientVirtualIP string `json:"vpn_ip_client"`
+	ServerVirtualIP string `json:"vpn_ip_server"`
 	Subdomain       string `json:"subdomain"`
 }
 
@@ -31,7 +32,7 @@ type WebSocketMessage struct {
 }
 
 // CallWebsocket 関数が各ステップを順に実行
-func CallWebsocket() (cvIP string, svIP string, otdmPubKey string, domainName string, err error) {
+func CallWebsocket() (cvIP string, svIP string, ServerPubKey string, domainName string, err error) {
 	// 起動時ログ
 	err = LogMessage(INFO, "websocket.go start")
 	if err != nil {
@@ -47,7 +48,7 @@ func CallWebsocket() (cvIP string, svIP string, otdmPubKey string, domainName st
 		err = LogMessage(ERRO, errMessage)
 		return "", "", "", "", err
 	}
-
+	fmt.Printf("GeneratePrivateKey:%v\n", privateKey)
 	// ステップ2: 初期設定ファイル作成
 	err = createOrEditConfig(privateKey, "", "", "", "")
 	if err != nil {
@@ -65,10 +66,10 @@ func CallWebsocket() (cvIP string, svIP string, otdmPubKey string, domainName st
 	   }
 	*/
 	// テスト用のダミーデータの挿入
-	cvIP, svIP, otdmPubKey, domainName = "192.168.1.10", "169.254.253.253", "testcodeKey", "otdm.dev"
+	cvIP, svIP, ServerPubKey, domainName = "192.168.1.10", "169.254.253.253", "testcodeKey", "otdm.dev"
 
 	// ステップ4: 取得した情報を設定ファイルに追記
-	err = createOrEditConfig(privateKey, cvIP, svIP, otdmPubKey, domainName)
+	err = createOrEditConfig(privateKey, cvIP, svIP, ServerPubKey, domainName)
 	if err != nil {
 		errMessage := fmt.Sprintf("Failed to update config with received data: %v\n", err)
 		err = LogMessage(ERRO, errMessage)
@@ -78,7 +79,7 @@ func CallWebsocket() (cvIP string, svIP string, otdmPubKey string, domainName st
 	err = LogMessage(INFO, "Configuration setup completed.")
 
 	// ステップ5: JSONファイルを/tmpに作成
-	err = createStatusJSON(cvIP, svIP, publicKey, otdmPubKey, domainName)
+	err = createStatusJSON(cvIP, svIP, publicKey, ServerPubKey, domainName)
 	if err != nil {
 		errMessage := fmt.Sprintf("Failed to create status JSON file: %v\n", err)
 		err = LogMessage(ERRO, errMessage)
@@ -92,7 +93,7 @@ func CallWebsocket() (cvIP string, svIP string, otdmPubKey string, domainName st
 		err = LogMessage(ERRO, errMessage)
 	}
 
-	return cvIP, svIP, otdmPubKey, domainName, nil
+	return cvIP, svIP, ServerPubKey, domainName, nil
 }
 
 // 鍵を生成する関数
@@ -123,68 +124,61 @@ func generateKeys() (privateKey, publicKey string, err error) {
 }
 
 // getWebSocketData はWebSocketを介してデータを取得
-func getWebSocketData(otdmPubKey string) (cvIP, svIP, otdmPubKeyResult, domainName string, err error) {
+func getWebSocketData(ServerPubKey string) (cvIP, svIP, ServerPubKeyResult, domainName string, err error) {
 	fmt.Printf("get web socket data start\n")
 
-	// WebSocketサーバーのURL
-	url := "ws://api.otdm.dev:8080"
-	c, _, err := websocket.DefaultDialer.Dial(url, nil)
-	if err != nil {
-		fmt.Printf("failed to connect to websocket server: %v\n", err)
-		return "", "", "", "", err
-	}
-	defer c.Close()
+	maxRetries := 5
+	retryDelay := 5 * time.Second
+	for retries := 0; retries < maxRetries; retries++ {
+		c, _, err := websocket.DefaultDialer.Dial(webscketURL, nil)
+		if err != nil {
+			fmt.Printf("failed to connect to websocket server: %v\n", err)
+			if retries == maxRetries-1 {
+				return "", "", "", "", fmt.Errorf("maximum retries reached: %v", err)
+			}
+			fmt.Printf("Retrying in %v...\n", retryDelay)
+			time.Sleep(retryDelay)
+			continue
+		}
+		defer c.Close()
 
-	// 公開鍵をWebSocketを通じて送信
-	err = c.WriteMessage(websocket.TextMessage, []byte(otdmPubKey))
-	if err != nil {
-		fmt.Printf("failed to send public key: %v\n", err)
-		return "", "", "", "", err
-	}
+		// 公開鍵をWebSocketを通じて送信
+		err = c.WriteMessage(websocket.TextMessage, []byte(ServerPubKey))
+		if err != nil {
+			fmt.Printf("failed to send public key: %v\n", err)
+			return "", "", "", "", err
+		}
 
-	// メッセージを受信
-	_, message, err := c.ReadMessage()
-	if err != nil {
-		fmt.Printf("failed to read message: %v\n", err)
-		return "", "", "", "", err
-	}
+		// メッセージを受信
+		_, message, err := c.ReadMessage()
+		if err != nil {
+			fmt.Printf("failed to read message: %v\n", err)
+			return "", "", "", "", err
+		}
 
-	// メッセージをJSONとしてデコード
-	var response WebSocketResponse
-	err = json.Unmarshal(message, &response)
-	if err != nil {
-		fmt.Printf("failed to unmarshal JSON: %v\n", err)
-		return "", "", "", "", err
-	}
+		// メッセージをJSONとしてデコード
+		var response WebSocketResponse
+		err = json.Unmarshal(message, &response)
+		if err != nil {
+			fmt.Printf("failed to unmarshal JSON: %v\n", err)
+			return "", "", "", "", err
+		}
 
-	// 必要な値を変数に代入
-	cvIP = response.VpnIpClient
-	svIP = response.VpnIpServer
-	otdmPubKeyResult = response.ServerPublicKey
-	domainName = response.Subdomain
+		// 必要な値を変数に代入
+		cvIP = response.ClientVirtualIP
+		svIP = response.ServerVirtualIP
+		ServerPubKeyResult = response.ServerPublicKey
+		domainName = response.Subdomain
 
-	fmt.Printf("Received data: cvIP=%s, svIP=%s, otdmPubKey=%s, domainName=%s\n", cvIP, svIP, otdmPubKeyResult, domainName)
-
-	// 追加でステータスメッセージを受信する場合の処理（省略可能）
-	_, statusMessage, err := c.ReadMessage()
-	if err != nil {
-		fmt.Printf("failed to read status message: %v\n", err)
-		return cvIP, svIP, otdmPubKeyResult, domainName, nil // 応急的に部分的な成功とする
-	}
-
-	var status WebSocketMessage
-	err = json.Unmarshal(statusMessage, &status)
-	if err != nil {
-		fmt.Printf("failed to unmarshal status JSON: %v\n", err)
-	} else {
-		fmt.Printf("Received status: %s (%s)\n", status.Message, status.Status)
+		fmt.Printf("Received data: cvIP=%s, svIP=%s, otdmPubKey=%s, domainName=%s\n", cvIP, svIP, ServerPubKeyResult, domainName)
+		return cvIP, svIP, ServerPubKeyResult, domainName, nil
 	}
 
-	return cvIP, svIP, otdmPubKeyResult, domainName, nil
+	return "", "", "", "", fmt.Errorf("failed to establish websocket connection")
 }
 
 // otdm.confを必要なら生成または編集する
-func createOrEditConfig(privateKey, cvIP, svIP, otdmPubKey, domainName string) error {
+func createOrEditConfig(privateKey, cvIP, svIP, ServerPubKey, domainName string) error {
 	// 設定ファイルのパスを /etc/wireguard/ に固定
 	configPath := filepath.Join("/etc/wireguard", "otdm.conf")
 
@@ -208,14 +202,14 @@ PublicKey = %s
 Endpoint = %s:51820
 AllowedIPs = %s/32
 PersistentKeepalive = 25
-`, privateKey, cvIP, otdmPubKey, domainName, svIP)
+`, privateKey, cvIP, ServerPubKey, domainName, svIP)
 
 	// ファイルが存在しなくても、初期化したい場合でも一貫してテンプレートで上書き
 	return ioutil.WriteFile(configPath, []byte(template), 0644)
 }
 
 // createStatusJSON は取得したデータをJSON形式で/tmpに保存
-func createStatusJSON(cvIP, svIP, publicKey, otdmPubKey, domainName string) error {
+func createStatusJSON(cvIP, svIP, publicKey, ServerPubKey, domainName string) error {
 	fileName := filepath.Join("/tmp", fmt.Sprintf("otdm_status.json"))
 
 	file, err := os.Create(fileName)
@@ -230,7 +224,7 @@ func createStatusJSON(cvIP, svIP, publicKey, otdmPubKey, domainName string) erro
         "publicKey": "%s",
         "otdmPublicKey": "%s",
         "Domain": "%s"
-    }`, cvIP, svIP, publicKey, otdmPubKey, domainName)
+    }`, cvIP, svIP, publicKey, ServerPubKey, domainName)
 
 	_, err = file.WriteString(jsonData)
 	return err

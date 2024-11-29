@@ -63,6 +63,16 @@ func CallWatchman(serverIP string) {
 // resetTunnel 関数はトンネルを再起動します
 func resetTunnel() {
 	fmt.Println("Resetting the tunnel...")
+	err := exec.Command("otdm", "down").Run()
+	if err != nil {
+		fmt.Printf("Failed to execute 'otdm down': %v\n", err)
+		LogMessage(ERRO, fmt.Sprintf("Failed to execute 'otdm down': %v", err))
+	}
+	err = exec.Command("otdm", "up").Run()
+	if err != nil {
+		fmt.Printf("Failed to execute 'otdm up': %v\n", err)
+		LogMessage(ERRO, fmt.Sprintf("Failed to execute 'otdm up': %v", err))
+	}
 	exec.Command("otdm", "down").Run()
 	exec.Command("otdm", "up").Run()
 }

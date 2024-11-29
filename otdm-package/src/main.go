@@ -45,7 +45,10 @@ func main() {
 			//fmt.Printf("Error during up: %v\n", err)
 			errMessage := fmt.Sprintf("Error during up:%v", err)
 			utils.ErrLogMessage(errMessage)
+		} else {
+			go utils.CallWatchman(svIP)
 		}
+		break
 	case "down":
 		if err := commands.RunDown(); err != nil {
 			//fmt.Println("Error during down:", err)
