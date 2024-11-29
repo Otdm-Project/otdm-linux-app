@@ -13,6 +13,7 @@ import (
 )
 
 const confFilePath = "/etc/wireguard/otdm.conf"
+const webscketURL = ""
 
 // メッセージ1の構造体
 type WebSocketResponse struct {
@@ -33,7 +34,6 @@ type WebSocketMessage struct {
 func CallWebsocket() (cvIP string, svIP string, otdmPubKey string, domainName string, err error) {
 	// 起動時ログ
 	err = LogMessage(INFO, "websocket.go start")
-	fmt.Printf("websocket.go start: %v\n", err)
 	if err != nil {
 		errMessage := fmt.Sprintf("Failed to websocket.go start: %v\n", err)
 		err = LogMessage(ERRO, errMessage)
@@ -42,24 +42,19 @@ func CallWebsocket() (cvIP string, svIP string, otdmPubKey string, domainName st
 
 	// ステップ1: 鍵の生成
 	privateKey, publicKey, err := generateKeys()
-	/* fmt.Printf("genkey: %v\n", err) */
 	if err != nil {
 		errMessage := fmt.Sprintf("Failed to generate keys: %v\n", err)
 		err = LogMessage(ERRO, errMessage)
 		return "", "", "", "", err
 	}
-	/* fmt.Printf("Generated keys: private=%s, public=%s\n", privateKey, publicKey)
-	fmt.Printf("genkey`s done: %v\n", err) */
 
 	// ステップ2: 初期設定ファイル作成
-	fmt.Printf("config start: %v\n", err)
 	err = createOrEditConfig(privateKey, "", "", "", "")
 	if err != nil {
 		errMessage := fmt.Sprintf("Failed to create/edit config: %v\n", err)
 		err = LogMessage(ERRO, errMessage)
 		return "", "", "", "", err
 	}
-	fmt.Printf("config done: %v\n", err)
 	// ステップ3: WebSocket 通信を確立して情報を取得
 	/*
 	   getWebSocketData()
@@ -69,8 +64,7 @@ func CallWebsocket() (cvIP string, svIP string, otdmPubKey string, domainName st
 	       return "", "", "", "", err
 	   }
 	*/
-
-	// ダミーデータの使用
+	// テスト用のダミーデータの挿入
 	cvIP, svIP, otdmPubKey, domainName = "192.168.1.10", "169.254.253.253", "testcodeKey", "otdm.dev"
 
 	// ステップ4: 取得した情報を設定ファイルに追記
@@ -80,7 +74,8 @@ func CallWebsocket() (cvIP string, svIP string, otdmPubKey string, domainName st
 		err = LogMessage(ERRO, errMessage)
 		return "", "", "", "", err
 	}
-	fmt.Println("Configuration setup completed.")
+
+	err = LogMessage(INFO, "Configuration setup completed.")
 
 	// ステップ5: JSONファイルを/tmpに作成
 	err = createStatusJSON(cvIP, svIP, publicKey, otdmPubKey, domainName)
@@ -98,6 +93,33 @@ func CallWebsocket() (cvIP string, svIP string, otdmPubKey string, domainName st
 	}
 
 	return cvIP, svIP, otdmPubKey, domainName, nil
+}
+
+// 鍵を生成する関数
+func generateKeys() (privateKey, publicKey string, err error) {
+	// 鍵生成のコマンド実行
+	privCmd := exec.Command("wg", "genkey")
+	privKey, err := privCmd.Output()
+	if err != nil {
+		errMessage := fmt.Sprintf("failed to generate private key: %v\n", err)
+		err = LogMessage(ERRO, errMessage)
+		return "", "", err
+	}
+
+	// プライベート鍵のトリム処理をして不正な文字を排除
+	trimmedPrivKey := strings.TrimSpace(string(privKey))
+
+	// 公開鍵生成のためのコマンド
+	pubCmd := exec.Command("bash", "-c", fmt.Sprintf("echo %s | wg pubkey", trimmedPrivKey))
+	pubKeyOutput, err := pubCmd.CombinedOutput()
+	if err != nil {
+		// 出力されたエラーメッセージを含める
+		errMessage := fmt.Sprintf("failed to generate public key: %v\n", err)
+		err = LogMessage(ERRO, errMessage)
+		return "", "", err
+	}
+
+	return strings.TrimSpace(string(privKey)), strings.TrimSpace(string(pubKeyOutput)), nil
 }
 
 // getWebSocketData はWebSocketを介してデータを取得
@@ -159,34 +181,6 @@ func getWebSocketData(otdmPubKey string) (cvIP, svIP, otdmPubKeyResult, domainNa
 	}
 
 	return cvIP, svIP, otdmPubKeyResult, domainName, nil
-}
-
-// 鍵を生成する関数
-func generateKeys() (privateKey, publicKey string, err error) {
-	// 鍵生成のコマンド実行
-	privCmd := exec.Command("wg", "genkey")
-	privKey, err := privCmd.Output()
-	if err != nil {
-		// 具体的なエラーメッセージを含める
-		errMessage := fmt.Sprintf("failed to generate private key: %v\n", err)
-		err = LogMessage(ERRO, errMessage)
-		return "", "", err
-	}
-
-	// プライベート鍵のトリム処理をして不正な文字を排除
-	trimmedPrivKey := strings.TrimSpace(string(privKey))
-
-	// 公開鍵生成のためのコマンド
-	pubCmd := exec.Command("bash", "-c", fmt.Sprintf("echo %s | wg pubkey", trimmedPrivKey))
-	pubKeyOutput, err := pubCmd.CombinedOutput()
-	if err != nil {
-		// 出力されたエラーメッセージを含める
-		errMessage := fmt.Sprintf("failed to generate public key: %v\n", err)
-		err = LogMessage(ERRO, errMessage)
-		return "", "", err
-	}
-
-	return strings.TrimSpace(string(privKey)), strings.TrimSpace(string(pubKeyOutput)), nil
 }
 
 // otdm.confを必要なら生成または編集する
