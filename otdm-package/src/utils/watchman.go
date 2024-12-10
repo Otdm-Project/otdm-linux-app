@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os/exec"
 	"time"
-	// "otdm-package/src/utils"
 )
 
 // CallWatchman は、トンネルが維持されているかを監視
@@ -13,6 +12,7 @@ func CallWatchman(serverIP string) {
 	if err != nil {
 		fmt.Printf("Failed to log message: %v\n", err)
 	}
+	pinger.SetPrivileged(true)
 	ticker := time.NewTicker(5 * time.Minute) // 5分ごとに監視サイクルを開始
 	defer ticker.Stop()
 
