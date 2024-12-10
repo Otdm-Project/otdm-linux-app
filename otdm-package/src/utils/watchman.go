@@ -5,11 +5,13 @@ import (
 	"os/exec"
 	"time"
 	// "otdm-package/src/utils"
+	"github.com/prometheus-community/pro-bing"
 )
 
 // CallWatchman は、トンネルが維持されているかを監視
 func CallWatchman(serverIP string) {
 	err := LogMessage(INFO, "watchman.go start")
+	pinger.SetPrivileged(true)
 	if err != nil {
 		fmt.Printf("Failed to log message: %v\n", err)
 	}
