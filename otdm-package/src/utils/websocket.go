@@ -13,7 +13,7 @@ import (
 )
 
 const confFilePath = "/etc/wireguard/otdm.conf"
-const webscketURL = ""
+const webscketURL = "ws://exsample.com:8080"
 
 // メッセージ1の構造体
 type WebSocketResponse struct {
@@ -56,16 +56,16 @@ func CallWebsocket() (cvIP string, svIP string, otdmPubKey string, domainName st
 		return "", "", "", "", err
 	}
 	// ステップ3: WebSocket 通信を確立して情報を取得
-	/*
-	   getWebSocketData()
-	   if err != nil {
-	       errMessage := fmt.Sprintf("Failed to retrieve data via WebSocket: %v\n", err)
-	       err = LogMessage(ERRO, errMessage)
-	       return "", "", "", "", err
-	   }
-	*/
+
+	getWebSocketData(publicKey)
+	if err != nil {
+		errMessage := fmt.Sprintf("Failed to retrieve data via WebSocket: %v\n", err)
+		err = LogMessage(ERRO, errMessage)
+		return "", "", "", "", err
+	}
+
 	// テスト用のダミーデータの挿入
-	cvIP, svIP, otdmPubKey, domainName = "192.168.1.10", "169.254.253.253", "testcodeKey", "otdm.dev"
+	//cvIP, svIP, otdmPubKey, domainName = "192.168.1.10", "169.254.253.253", "testcodeKey", "otdm.dev"
 
 	// ステップ4: 取得した情報を設定ファイルに追記
 	err = createOrEditConfig(privateKey, cvIP, svIP, otdmPubKey, domainName)
@@ -126,9 +126,7 @@ func generateKeys() (privateKey, publicKey string, err error) {
 func getWebSocketData(otdmPubKey string) (cvIP, svIP, otdmPubKeyResult, domainName string, err error) {
 	fmt.Printf("get web socket data start\n")
 
-	// WebSocketサーバーのURL
-	url := "ws://api.otdm.dev:8080"
-	c, _, err := websocket.DefaultDialer.Dial(url, nil)
+	c, _, err := websocket.DefaultDialer.Dial(webscketURL, nil)
 	if err != nil {
 		fmt.Printf("failed to connect to websocket server: %v\n", err)
 		return "", "", "", "", err
