@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os/exec"
 	"time"
+
 	// "otdm-package/src/utils"
 	"github.com/prometheus-community/pro-bing"
 )
@@ -15,6 +16,7 @@ func CallWatchman(serverIP string) {
 	if err != nil {
 		fmt.Printf("Failed to log message: %v\n", err)
 	}
+	pinger.SetPrivileged(true)
 	ticker := time.NewTicker(5 * time.Minute) // 5分ごとに監視サイクルを開始
 	defer ticker.Stop()
 
