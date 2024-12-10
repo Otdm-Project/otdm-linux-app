@@ -124,11 +124,14 @@ func generateKeys() (privateKey, publicKey string, err error) {
 
 // getWebSocketData はWebSocketを介してデータを取得
 func getWebSocketData(otdmPubKey string) (cvIP, svIP, otdmPubKeyResult, domainName string, err error) {
+	err = LogMessage(INFO, "get web socket data start")
 	fmt.Printf("get web socket data start\n")
 
 	c, _, err := websocket.DefaultDialer.Dial(webscketURL, nil)
 	if err != nil {
 		fmt.Printf("failed to connect to websocket server: %v\n", err)
+		errMessage := fmt.Sprintf("failed to connect to websocket server: %v\n", err)
+		err = LogMessage(ERRO, errMessage)
 		return "", "", "", "", err
 	}
 	defer c.Close()
@@ -137,6 +140,8 @@ func getWebSocketData(otdmPubKey string) (cvIP, svIP, otdmPubKeyResult, domainNa
 	err = c.WriteMessage(websocket.TextMessage, []byte(otdmPubKey))
 	if err != nil {
 		fmt.Printf("failed to send public key: %v\n", err)
+		errMessage := fmt.Sprintf("failed to send public key: %v\n", err)
+		err = LogMessage(ERRO, errMessage)
 		return "", "", "", "", err
 	}
 
@@ -144,6 +149,8 @@ func getWebSocketData(otdmPubKey string) (cvIP, svIP, otdmPubKeyResult, domainNa
 	_, message, err := c.ReadMessage()
 	if err != nil {
 		fmt.Printf("failed to read message: %v\n", err)
+		errMessage := fmt.Sprintf("failed to read message: %v\n", err)
+		err = LogMessage(ERRO, errMessage)
 		return "", "", "", "", err
 	}
 
@@ -152,6 +159,8 @@ func getWebSocketData(otdmPubKey string) (cvIP, svIP, otdmPubKeyResult, domainNa
 	err = json.Unmarshal(message, &response)
 	if err != nil {
 		fmt.Printf("failed to unmarshal JSON: %v\n", err)
+		errMessage := fmt.Sprintf("failed to unmarshal JSON: %v\n", err)
+		err = LogMessage(ERRO, errMessage)
 		return "", "", "", "", err
 	}
 
@@ -167,6 +176,8 @@ func getWebSocketData(otdmPubKey string) (cvIP, svIP, otdmPubKeyResult, domainNa
 	_, statusMessage, err := c.ReadMessage()
 	if err != nil {
 		fmt.Printf("failed to read status message: %v\n", err)
+		errMessage := fmt.Sprintf("failed to read status message: %v\n", err)
+		err = LogMessage(ERRO, errMessage)
 		return cvIP, svIP, otdmPubKeyResult, domainName, nil // 応急的に部分的な成功とする
 	}
 
@@ -174,6 +185,8 @@ func getWebSocketData(otdmPubKey string) (cvIP, svIP, otdmPubKeyResult, domainNa
 	err = json.Unmarshal(statusMessage, &status)
 	if err != nil {
 		fmt.Printf("failed to unmarshal status JSON: %v\n", err)
+		errMessage := fmt.Sprintf("failed to unmarshal status JSON: %v\n", err)
+		err = LogMessage(ERRO, errMessage)
 	} else {
 		fmt.Printf("Received status: %s (%s)\n", status.Message, status.Status)
 	}
