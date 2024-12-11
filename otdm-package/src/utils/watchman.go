@@ -6,61 +6,77 @@ import (
 	"time"
 
 	// "otdm-package/src/utils"
-	"github.com/prometheus-community/pro-bing"
+	probing "github.com/prometheus-community/pro-bing"
 )
 
-// CallWatchman は、トンネルが維持されているかを監視
-func CallWatchman(serverIP string) {
-	err := LogMessage(INFO, "watchman.go start")
-	pinger.SetPrivileged(true)
+// sendPing は指定したサーバーIPに対してICMP通信を行う
+func SendPing(serverIP string) bool {
+	// pinger インスタンスを作成
+	pinger, err := probing.NewPinger(serverIP)
 	if err != nil {
-		fmt.Printf("Failed to log message: %v\n", err)
+		fmt.Printf("Failed to create pinger: %v\n", err)
+		return false
 	}
+
+	// ICMP送信の特権モードで有効化(Linuxで必要)
 	pinger.SetPrivileged(true)
-	ticker := time.NewTicker(5 * time.Minute) // 5分ごとに監視サイクルを開始
+
+	// 送信パケット数とタイムアウトを設定
+	pinger.Count = 4
+	pinger.Timeout = 10 * time.Second
+
+	// Ping 実行
+	fmt.Printf("Pinging server: %s\n", serverIP)
+	err = pinger.Run()
+	if err != nil {
+		fmt.Printf("Ping failed: %v\n", err)
+		return false
+	}
+
+	// 結果を取得
+	stats := pinger.Statistics()
+	if stats.PacketsRecv == 0 {
+		fmt.Println("No packets received, server unreachable.")
+		return false
+	}
+
+	fmt.Printf("Ping successful: %d/%d packets received.\n", stats.PacketsRecv, stats.PacketsSent)
+
+	return true
+}
+
+// CallWatchman はサーバーとの初回ハンドシェイクとトンネル維持監視を行います
+func CallWatchman(serverIP string) {
+	fmt.Println("Starting Watchman...")
+
+	// 初回ハンドシェイクを試みる（最大3回の再送）
+	for i := 0; i < 3; i++ {
+		if SendPing(serverIP) {
+			fmt.Println("Handshake with server successful.")
+			break
+		} else if i == 2 { // 3回目も失敗した場合
+			fmt.Println("Failed to establish handshake with server after 3 attempts. Exiting.")
+			return
+		}
+		fmt.Printf("Retrying handshake (%d/3)...\n", i+2)
+		time.Sleep(5 * time.Second)
+	}
+
+	// 監視ループ開始
+	ticker := time.NewTicker(5 * time.Minute)
 	defer ticker.Stop()
 
 	for {
 		select {
 		case <-ticker.C:
-			fmt.Println("Checking tunnel health...")
-
-			// 最大三回の再送回数のカウンタ
-			attempts := 3
-			success := false
-
-			for i := 0; i < attempts; i++ {
-				fmt.Printf("Ping attempt %d...\n", i+1)
-
-				// pingコマンドを使用して応答を確認
-				err := exec.Command("ping", "-c", "4", "-w", "4", serverIP).Run()
-
-				if err == nil {
-					fmt.Println("Tunnel is healthy.")
-					success = true
-					break
-				} else {
-					fmt.Printf("Ping attempt %d failed: %v\n", i+1, err)
-				}
-			}
-
-			if !success {
-				fmt.Println("Tunnel is deemed unhealthy after three attempts.")
-
-				// logger.goに異常を伝える処理
-				err := LogMessage(ERRO, "Tunnel is unhealthy. Attempting to reset.")
-				if err != nil {
-					fmt.Printf("Failed to log message: %v\n", err)
-				}
-				// 異常と判断したのでトンネルを再試行、現段階
+			fmt.Println("Checking server health...")
+			if !SendPing(serverIP) {
+				fmt.Println("Server unreachable. Attempting to reset tunnel.")
 				resetTunnel()
+			} else {
+				fmt.Println("Server is healthy.")
 			}
-
 		}
-	}
-	err = LogMessage(INFO, "watchman.go done")
-	if err != nil {
-		fmt.Printf("Failed to log message: %v\n", err)
 	}
 }
 
