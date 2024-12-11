@@ -12,6 +12,16 @@ sudo cp otdm /usr/local/bin/
 ```
 でコマンドを実行できるようにする。
 
+### ログの基本構文
+```go
+err = LogMessage(INFO, "<INFOメッセージ>")
+```
+
+```go
+errMessage := fmt.Sprintf("<エラーメッセージ> %v\n", err)
+		err = LogMessage(ERRO, errMessage)
+```
+
 ### ジャーナルの確認
 ```
 journalctl -t otdm-package
@@ -113,9 +123,9 @@ git checkout -b <取り込んだ際のブランチ名> <元となるブランチ
 
 > ubuntu-103@ubuntu-103:~/sandbox/otdmGui$ git fetch 
 > ubuntu-103@ubuntu-103:~/sandbox/otdmGui$ git branch 
-> * main
+> \* main
 > ubuntu-103@ubuntu-103:~/sandbox/otdmGui$ git branch -a
-> * main
+> \* main
 >   remotes/origin/HEAD -> origin/main
 >   remotes/origin/MainEntry
 >   remotes/origin/ReworkBase
@@ -124,7 +134,7 @@ git checkout -b <取り込んだ際のブランチ名> <元となるブランチ
 > branch 'MainEntry' set up to track 'origin/MainEntry'.
 > Switched to a new branch 'MainEntry'
 > ubuntu-103@ubuntu-103:~/sandbox/otdmGui$ git branch -vv
-> * MainEntry ef767f6 [origin/MainEntry] 修正：【未解決】Vue router構築中
+> \* MainEntry ef767f6 [origin/MainEntry] 修正：【未解決】Vue router構築中
 >   main│     b2af626 [origin/main] Merge pull request #4 from Otdm-Project/ReworkBase
 > ubuntu-103@ubuntu-103:~/sandbox/otdmGui$ 
 

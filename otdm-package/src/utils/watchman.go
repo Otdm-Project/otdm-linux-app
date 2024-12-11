@@ -9,6 +9,11 @@ import (
 	probing "github.com/prometheus-community/pro-bing"
 )
 
+type messages struct {
+	message    string
+	errmessage string
+}
+
 // sendPing は指定したサーバーIPに対してICMP通信を行う
 func SendPing(serverIP string) bool {
 	// pinger インスタンスを作成
@@ -26,7 +31,10 @@ func SendPing(serverIP string) bool {
 	pinger.Timeout = 10 * time.Second
 
 	// Ping 実行
-	fmt.Printf("Pinging server: %s\n", serverIP)
+	//Message := fmt.Printf("Pinging server: %v\n", serverIP)
+	LogMessage(INFO, fmt.Sprintf("Starting watchman for server: %s", serverIP))
+	err = LogMessage(INFO, "Pinging server")
+
 	err = pinger.Run()
 	if err != nil {
 		fmt.Printf("Ping failed: %v\n", err)
@@ -36,7 +44,7 @@ func SendPing(serverIP string) bool {
 	// 結果を取得
 	stats := pinger.Statistics()
 	if stats.PacketsRecv == 0 {
-		fmt.Println("No packets received, server unreachable.")
+		err = LogMessage(ERRO, "No packets received, server unreachable.")
 		return false
 	}
 
@@ -47,15 +55,15 @@ func SendPing(serverIP string) bool {
 
 // CallWatchman はサーバーとの初回ハンドシェイクとトンネル維持監視を行います
 func CallWatchman(serverIP string) {
-	fmt.Println("Starting Watchman...")
+	LogMessage(INFO, "watchman.go start")
 
 	// 初回ハンドシェイクを試みる（最大3回の再送）
 	for i := 0; i < 3; i++ {
 		if SendPing(serverIP) {
-			fmt.Println("Handshake with server successful.")
+			LogMessage(INFO, "Handshake with server successful.")
 			break
 		} else if i == 2 { // 3回目も失敗した場合
-			fmt.Println("Failed to establish handshake with server after 3 attempts. Exiting.")
+			LogMessage(INFO, "Failed to establish handshake with server after 3 attempts. Exiting.")
 			return
 		}
 		fmt.Printf("Retrying handshake (%d/3)...\n", i+2)
@@ -69,12 +77,12 @@ func CallWatchman(serverIP string) {
 	for {
 		select {
 		case <-ticker.C:
-			fmt.Println("Checking server health...")
+			LogMessage(INFO, "Checking server health...")
 			if !SendPing(serverIP) {
-				fmt.Println("Server unreachable. Attempting to reset tunnel.")
+				LogMessage(ERRO, "Server unreachable. Attempting to reset tunnel.")
 				resetTunnel()
 			} else {
-				fmt.Println("Server is healthy.")
+				LogMessage(INFO, "Server is healthy.")
 			}
 		}
 	}
@@ -82,7 +90,7 @@ func CallWatchman(serverIP string) {
 
 // resetTunnel 関数はトンネルを再起動します
 func resetTunnel() {
-	fmt.Println("Resetting the tunnel...")
+	LogMessage(INFO, "Resetting the tunnel...")
 	err := exec.Command("otdm", "down").Run()
 	if err != nil {
 		fmt.Printf("Failed to execute 'otdm down': %v\n", err)
