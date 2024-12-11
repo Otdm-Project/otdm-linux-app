@@ -37,7 +37,7 @@ func SendPing(serverIP string) bool {
 
 	err = pinger.Run()
 	if err != nil {
-		fmt.Printf("Ping failed: %v\n", err)
+		LogMessage(ERRO, fmt.Sprintf("Ping failed: %v\n", err))
 		return false
 	}
 
@@ -48,7 +48,7 @@ func SendPing(serverIP string) bool {
 		return false
 	}
 
-	fmt.Printf("Ping successful: %d/%d packets received.\n", stats.PacketsRecv, stats.PacketsSent)
+	LogMessage(INFO, fmt.Sprintf("Ping successful: %d/%d packets received.\n", stats.PacketsRecv, stats.PacketsSent))
 
 	return true
 }
@@ -66,7 +66,7 @@ func CallWatchman(serverIP string) {
 			LogMessage(INFO, "Failed to establish handshake with server after 3 attempts. Exiting.")
 			return
 		}
-		fmt.Printf("Retrying handshake (%d/3)...\n", i+2)
+		LogMessage(INFO, fmt.Sprintf("Retrying handshake (%d/3)...\n", i+2))
 		time.Sleep(5 * time.Second)
 	}
 
