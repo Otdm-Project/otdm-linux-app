@@ -57,15 +57,15 @@ func CallWebsocket() (cvIP string, svIP string, ServerPubKey string, domainName 
 	}
 	// ステップ3: WebSocket 通信を確立して情報を取得
 
-	getWebSocketData(publicKey)
+	/*getWebSocketData(publicKey)
 	if err != nil {
 		errMessage := fmt.Sprintf("Failed to retrieve data via WebSocket: %v\n", err)
 		err = LogMessage(ERRO, errMessage)
 		return "", "", "", "", err
 	}
-
+	*/
 	// テスト用のダミーデータの挿入
-	//cvIP, svIP, ServerPubKey, domainName = "192.168.1.10", "169.254.253.253", "testcodeKey", "otdm.dev"
+	cvIP, svIP, ServerPubKey, domainName = "192.168.1.10", "169.254.253.253", "testcodeKey", "otdm.dev"
 
 	// ステップ4: 取得した情報を設定ファイルに追記
 	err = createOrEditConfig(privateKey, cvIP, svIP, ServerPubKey, domainName)
@@ -212,7 +212,7 @@ func createOrEditConfig(privateKey, cvIP, svIP, ServerPubKey, domainName string)
 	template := fmt.Sprintf(`
 [Interface]
 PrivateKey = %s
-Address = %s/24
+Address = %s/32
 
 [Peer]
 PublicKey = %s

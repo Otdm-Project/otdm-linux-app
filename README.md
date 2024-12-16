@@ -22,10 +22,24 @@ errMessage := fmt.Sprintf("<エラーメッセージ> %v\n", err)
 		err = LogMessage(ERRO, errMessage)
 ```
 
-### ジャーナルの確認
+
+
+### 各種設定箇所の確認
+ログファイル
 ```
-journalctl -t otdm-package
+cat /var/log/otdm-package.log
 ```
+
+otdm statusで表示するjsonファイル
+```
+cat /tmp/otdm_staus.json
+```
+
+wireguardのコンフィグファイル
+```
+su - && cat /etc/wireguard
+```
+
 で可能
 
 ### 開発中使用
