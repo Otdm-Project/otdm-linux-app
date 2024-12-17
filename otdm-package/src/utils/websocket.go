@@ -65,7 +65,7 @@ func CallWebsocket() (cvIP string, svIP string, ServerPubKey string, domainName 
 	}
 
 	// テスト用のダミーデータの挿入
-	//cvIP, svIP, ServerPubKey, domainName = "192.168.1.10", "169.254.253.253", "testcodeKey", "otdm.dev"
+	//cvIP, svIP, ServerPubKey, domainName = "10.0.0.2", "10.0.0.1", "Md9I+n0F0UB2wvB0/tqHLhj4sDS/DIFGxV8CGIPdQhc=", "otdm.dev"
 
 	// ステップ4: 取得した情報を設定ファイルに追記
 	err = createOrEditConfig(privateKey, cvIP, svIP, ServerPubKey, domainName)
@@ -208,7 +208,7 @@ func createOrEditConfig(privateKey, cvIP, svIP, ServerPubKey, domainName string)
 		}
 	}
 
-	// コンフィグテンプレートの全体
+	// コンフィグテンプレートの全体 仮テスト以外はL218,L219間にEndpoint = vpn.otdm.dev:51820を入れる事
 	template := fmt.Sprintf(`
 [Interface]
 PrivateKey = %s
