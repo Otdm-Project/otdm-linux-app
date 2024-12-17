@@ -216,10 +216,10 @@ Address = %s/32
 
 [Peer]
 PublicKey = %s
-Endpoint = %s:51820
+Endpoint = vpn.otdm.dev:51820
 AllowedIPs = %s/32
 PersistentKeepalive = 25
-`, privateKey, cvIP, ServerPubKey, domainName, svIP)
+`, privateKey, cvIP, ServerPubKey, svIP)
 
 	// ファイルが存在しなくても、初期化したい場合でも一貫してテンプレートで上書き
 	return ioutil.WriteFile(configPath, []byte(template), 0644)
