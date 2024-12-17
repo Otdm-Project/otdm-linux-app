@@ -13,7 +13,7 @@ import (
 )
 
 const confFilePath = "/etc/wireguard/otdm.conf"
-const webscketURL = "ws://exsample.com:8080"
+const webscketURL = "ws://example:8080/ws"
 
 // メッセージ1の構造体
 type WebSocketResponse struct {
@@ -47,7 +47,7 @@ func CallWebsocket() (cvIP string, svIP string, ServerPubKey string, domainName 
 		err = LogMessage(ERRO, errMessage)
 		return "", "", "", "", err
 	}
-	LogMessage(INFO, fmt.Sprintf("GeneratePrivateKey:%v\n", privateKey))
+	LogMessage(INFO, fmt.Sprintf("GeneratePublicKey:%v\n", publicKey))
 	// ステップ2: 初期設定ファイル作成
 	err = createOrEditConfig(privateKey, "", "", "", "")
 	if err != nil {
@@ -57,15 +57,15 @@ func CallWebsocket() (cvIP string, svIP string, ServerPubKey string, domainName 
 	}
 	// ステップ3: WebSocket 通信を確立して情報を取得
 
-	/*getWebSocketData(publicKey)
+	cvIP, svIP, ServerPubKey, domainName, err = getWebSocketData(publicKey)
 	if err != nil {
 		errMessage := fmt.Sprintf("Failed to retrieve data via WebSocket: %v\n", err)
 		err = LogMessage(ERRO, errMessage)
 		return "", "", "", "", err
 	}
-	*/
+
 	// テスト用のダミーデータの挿入
-	cvIP, svIP, ServerPubKey, domainName = "192.168.1.10", "169.254.253.253", "testcodeKey", "otdm.dev"
+	//cvIP, svIP, ServerPubKey, domainName = "192.168.1.10", "169.254.253.253", "testcodeKey", "otdm.dev"
 
 	// ステップ4: 取得した情報を設定ファイルに追記
 	err = createOrEditConfig(privateKey, cvIP, svIP, ServerPubKey, domainName)
