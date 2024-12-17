@@ -13,7 +13,7 @@ import (
 )
 
 const confFilePath = "/etc/wireguard/otdm.conf"
-const webscketURL = "ws://example:8080/ws"
+const webscketURL = "ws://35.73.31.183:8080/ws"
 
 // メッセージ1の構造体
 type WebSocketResponse struct {
