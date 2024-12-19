@@ -11,6 +11,7 @@ import (
 // グローバルにデータを保持する変数宣言
 var (
 	cvIP, svIP, otdmPubKey, domainName, errMessage string
+	httpPort                                       int
 )
 
 // バージョン情報の定義
@@ -40,7 +41,7 @@ func main() {
 	case "up":
 
 		// WebSocketからのデータを受け取る
-		cvIP, svIP, otdmPubKey, domainName, err = commands.RunUp()
+		cvIP, svIP, otdmPubKey, domainName, httpPort, err = commands.RunUp()
 		if err != nil {
 			//fmt.Printf("Error during up: %v\n", err)
 			errMessage := fmt.Sprintf("Error during up:%v", err)
