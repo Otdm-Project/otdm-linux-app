@@ -19,7 +19,8 @@ func SendPing(serverIP string) bool {
 	// pinger インスタンスを作成
 	pinger, err := probing.NewPinger(serverIP)
 	if err != nil {
-		fmt.Printf("Failed to create pinger: %v\n", err)
+		errMessage := fmt.Sprintf("Failed to create pinger: %v\n", err)
+		LogMessage(ERRO, errMessage)
 		return false
 	}
 
