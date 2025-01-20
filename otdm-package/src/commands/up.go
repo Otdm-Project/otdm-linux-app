@@ -1,3 +1,4 @@
+// up.go
 package commands
 
 import (
@@ -42,6 +43,7 @@ func RunUp() (cvIP, svIP, otdmPubKey, domainName string, httpPort int, err error
 	}
 
 	// トンネル健康状態の監視関連 (バックグラウンドで実行）
+	utils.LogMessage(utils.INFO, "Starting CallWatchman in goroutine")
 	go utils.CallWatchman(svIP)
 
 	err = utils.LogMessage(utils.INFO, "otdm up done.")
