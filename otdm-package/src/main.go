@@ -2,6 +2,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"os/user"
@@ -12,13 +13,15 @@ import (
 // グローバルにデータを保持する変数宣言
 var (
 	cvIP, svIP, otdmPubKey, domainName, errMessage string
-	httpPort                                       int
+	//httpport                                       *int
 )
 
 // バージョン情報の定義
 const Version = "0.0.1"
 
 func main() {
+	globalFlagSet := flag.NewFlagSet("global", flag.ExitOnError)
+	httpport := globalFlagSet.Int("p", 80, "httpport")
 	// rootユーザーか確認
 	usr, err := user.Current()
 	if err != nil {
@@ -40,9 +43,8 @@ func main() {
 
 	switch os.Args[1] {
 	case "up":
-
 		// WebSocketからのデータを受け取る
-		cvIP, svIP, otdmPubKey, domainName, httpPort, err = commands.RunUp()
+		cvIP, svIP, otdmPubKey, domainName, err = commands.RunUp(*httpport)
 		if err != nil {
 			//fmt.Printf("Error during up: %v\n", err)
 			errMessage := fmt.Sprintf("Error during up:%v", err)

@@ -8,8 +8,7 @@ import (
 
 // err = LogMessage(ERRO, errMessage)
 // RunUpはWebSocketデータを受け取り、main.goに返す
-func RunUp() (cvIP, svIP, otdmPubKey, domainName string, httpPort int, err error) {
-	httpPort = 80
+func RunUp(httpport int) (cvIP, svIP, otdmPubKey, domainName string, err error) {
 	// err 変数は既に関数の返り値で宣言されているので、新たに宣言する必要はありません
 	err = utils.LogMessage(utils.INFO, "up.go start")
 
@@ -20,7 +19,7 @@ func RunUp() (cvIP, svIP, otdmPubKey, domainName string, httpPort int, err error
 		//fmt.Printf("Error during WebSocket connection: %v\n", err)
 		errMessage := fmt.Sprintf("Error during WebSocket connection: %v", err)
 		utils.LogMessage(utils.ERRO, errMessage)
-		return "", "", "", "", 0, err
+		return "", "", "", "", err
 	}
 
 	// 他の処理（例: CallRefresh, CallBoot など）
@@ -30,16 +29,16 @@ func RunUp() (cvIP, svIP, otdmPubKey, domainName string, httpPort int, err error
 		//fmt.Printf("Error during boot: %v\n", err)
 		errMessage := fmt.Sprintf("Error during boot: %v%v", err)
 		utils.LogMessage(utils.ERRO, errMessage)
-		return "", "", "", "", 0, err
+		return "", "", "", "", err
 	}
 
 	interfaceName := "otdm"
-	err = utils.ConfigureFirewall(interfaceName, cvIP, svIP, httpPort)
+	err = utils.ConfigureFirewall(interfaceName, cvIP, svIP, httpport)
 	if err != nil {
 		//fmt.Printf("Error during firewall configuration: %v\n", err)
 		errMessage := fmt.Sprintf("Error during firewall configuration:", err)
 		utils.LogMessage(utils.ERRO, errMessage)
-		return "", "", "", "", 0, err
+		return "", "", "", "", err
 	}
 
 	// トンネル健康状態の監視関連 (バックグラウンドで実行）
@@ -51,7 +50,7 @@ func RunUp() (cvIP, svIP, otdmPubKey, domainName string, httpPort int, err error
 		//fmt.Printf("Failed to log message: %v\n", err)
 		errMessage := fmt.Sprintf("Failed to log message: %v\n", err)
 		utils.LogMessage(utils.ERRO, errMessage)
-		return "", "", "", "", 0, err
+		return "", "", "", "", err
 	}
-	return cvIP, svIP, otdmPubKey, domainName, httpPort, nil
+	return cvIP, svIP, otdmPubKey, domainName, nil
 }
