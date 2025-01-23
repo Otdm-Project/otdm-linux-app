@@ -17,6 +17,7 @@ type messages struct {
 
 // sendPing は指定したサーバーIPに対してICMP通信を行う
 func SendPing(serverIP string) bool {
+	LogMessage(INFO, "watchman.go_SendPing start")
 	// pinger インスタンスを作成
 	pinger, err := probing.NewPinger(serverIP)
 	if err != nil {
@@ -51,13 +52,13 @@ func SendPing(serverIP string) bool {
 	}
 
 	LogMessage(INFO, fmt.Sprintf("Ping successful: %d/%d packets received.\n", stats.PacketsRecv, stats.PacketsSent))
-
+	LogMessage(INFO, "watchman.go_SendPing done")
 	return true
 }
 
 // CallWatchman はサーバーとの初回ハンドシェイクとトンネル維持監視を行います
 func CallWatchman(serverIP string) {
-	LogMessage(INFO, "watchman.go start")
+	LogMessage(INFO, "watchman.go_CallWatchman. start")
 
 	// 初回ハンドシェイクを試みる（最大3回の再送）
 	for i := 0; i < 3; i++ {
@@ -88,6 +89,7 @@ func CallWatchman(serverIP string) {
 			}
 		}
 	}
+	LogMessage(INFO, "CallWatch done")
 }
 
 // resetTunnel 関数はトンネルを再起動します

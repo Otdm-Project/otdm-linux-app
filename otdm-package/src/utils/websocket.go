@@ -13,7 +13,9 @@ import (
 )
 
 const confFilePath = "/etc/wireguard/otdm.conf"
-const webscketURL = "ws://35.73.31.183:8080/ws"
+
+// const webscketURL = "ws://35.73.31.183:8080/ws"
+const webscketURL = "ws://172.17.0.1:8080/ws"
 
 // メッセージ1の構造体
 type WebSocketResponse struct {
@@ -34,6 +36,7 @@ type WebSocketMessage struct {
 func CallWebsocket() (cvIP string, svIP string, ServerPubKey string, domainName string, err error) {
 	// 起動時ログ
 	err = LogMessage(INFO, "websocket.go start")
+	LogMessage(INFO, "websocket.go_CallWebsocket start")
 	if err != nil {
 		errMessage := fmt.Sprintf("Failed to websocket.go start: %v\n", err)
 		err = LogMessage(ERRO, errMessage)
@@ -65,7 +68,7 @@ func CallWebsocket() (cvIP string, svIP string, ServerPubKey string, domainName 
 	}
 
 	// テスト用のダミーデータの挿入
-	//cvIP, svIP, ServerPubKey, domainName = "10.0.0.2", "10.0.0.1", "Md9I+n0F0UB2wvB0/tqHLhj4sDS/DIFGxV8CGIPdQhc=", "otdm.dev"
+	//cvIP, svIP, ServerPubKey, domainName = "10.0.0.2", "127.0.0.1", "dammyKey", "otdm.dev"
 
 	// ステップ4: 取得した情報を設定ファイルに追記
 	err = createOrEditConfig(privateKey, cvIP, svIP, ServerPubKey, domainName)
@@ -92,11 +95,13 @@ func CallWebsocket() (cvIP string, svIP string, ServerPubKey string, domainName 
 		err = LogMessage(ERRO, errMessage)
 	}
 
+	LogMessage(INFO, "websocket.go_CallWebsocket done")
 	return cvIP, svIP, ServerPubKey, domainName, nil
 }
 
 // 鍵を生成する関数
 func generateKeys() (privateKey, publicKey string, err error) {
+	LogMessage(INFO, "websocket.go_generateKeys start")
 	// 鍵生成のコマンド実行
 	privCmd := exec.Command("wg", "genkey")
 	privKey, err := privCmd.Output()
@@ -119,6 +124,7 @@ func generateKeys() (privateKey, publicKey string, err error) {
 		return "", "", err
 	}
 
+	LogMessage(INFO, "websocket.go_generateKeys done")
 	return strings.TrimSpace(string(privKey)), strings.TrimSpace(string(pubKeyOutput)), nil
 }
 
@@ -191,6 +197,7 @@ func getWebSocketData(otdmPubKey string) (cvIP, svIP, otdmPubKeyResult, domainNa
 		LogMessage(INFO, fmt.Sprintf("Received status: %s (%s)\n", status.Message, status.Status))
 	}
 
+	LogMessage(INFO, fmt.Sprintf("get web socket data start\n"))
 	return cvIP, svIP, otdmPubKeyResult, domainName, nil
 }
 

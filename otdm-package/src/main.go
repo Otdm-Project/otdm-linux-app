@@ -13,7 +13,6 @@ import (
 // グローバルにデータを保持する変数宣言
 var (
 	cvIP, svIP, otdmPubKey, domainName, errMessage string
-	//httpport                                       *int
 )
 
 // バージョン情報の定義
@@ -50,8 +49,9 @@ func main() {
 			errMessage := fmt.Sprintf("Error during up:%v", err)
 			utils.ErrLogMessage(errMessage)
 		} else {
-			go utils.CallWatchman(svIP)
+
 		}
+		utils.CallWatchman(svIP)
 		break
 	case "down":
 		if err := commands.RunDown(); err != nil {
