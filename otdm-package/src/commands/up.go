@@ -11,7 +11,6 @@ import (
 func RunUp(httpport int) (cvIP, svIP, otdmPubKey, domainName string, err error) {
 	// err 変数は既に関数の返り値で宣言されているので、新たに宣言する必要はありません
 	err = utils.LogMessage(utils.INFO, "up.go start")
-
 	// refresh.goを呼び出す
 	utils.CallRefresh()
 
@@ -42,7 +41,7 @@ func RunUp(httpport int) (cvIP, svIP, otdmPubKey, domainName string, err error) 
 	// トンネル健康状態の監視関連 (バックグラウンドで実行）
 	utils.LogMessage(utils.INFO, "Starting CallWatchman in goroutine")
 	//go utils.CallWatchman(svIP)
-	utils.CallWatchman(svIP)
+	go utils.CallWatchman(svIP)
 
 	err = utils.LogMessage(utils.INFO, "otdm up done.")
 	if err != nil {

@@ -1,110 +1,118 @@
-// watchman.go
 package utils
 
 import (
 	"fmt"
+	"log"
+	"net"
+	"os"
 	"os/exec"
 	"time"
 
-	// "otdm-package/src/utils"
-	probing "github.com/prometheus-community/pro-bing"
+	ping "github.com/prometheus-community/pro-bing"
 )
 
-type messages struct {
-	message    string
-	errmessage string
-}
+// Watchping はサーバーへの ICMP ping を送信し、到達可能かを確認する
+func CallWatchman(svip string) bool {
+	LogMessage(INFO, "watchman.go-WatchPing start")
+	defer LogMessage(INFO, "watchman.go-WatchPing done")
 
-// sendPing は指定したサーバーIPに対してICMP通信を行う
-func SendPing(serverIP string) bool {
-	LogMessage(INFO, "watchman.go_SendPing start")
-	// pinger インスタンスを作成
-	pinger, err := probing.NewPinger(serverIP)
+	pinger, err := ping.NewPinger(svip)
 	if err != nil {
-		errMessage := fmt.Sprintf("Failed to create pinger: %v\n", err)
-		LogMessage(ERRO, errMessage)
+		LogMessage(ERRO, fmt.Sprintf("Ping instance creation failed: %v", err))
 		return false
 	}
-
-	// ICMP送信の特権モードで有効化(Linuxで必要)
 	pinger.SetPrivileged(true)
-
-	// 送信パケット数とタイムアウトを設定
-	pinger.Count = 4
+	pinger.Count = 5
 	pinger.Timeout = 10 * time.Second
-
-	// Ping 実行
-	//Message := fmt.Printf("Pinging server: %v\n", serverIP)
-	LogMessage(INFO, fmt.Sprintf("Starting watchman for server: %s", serverIP))
-	err = LogMessage(INFO, "Pinging server")
 
 	err = pinger.Run()
 	if err != nil {
-		LogMessage(ERRO, fmt.Sprintf("Ping failed: %v\n", err))
+		LogMessage(ERRO, fmt.Sprintf("Ping execution failed: %v", err))
 		return false
 	}
 
-	// 結果を取得
 	stats := pinger.Statistics()
-	if stats.PacketsRecv == 0 {
-		err = LogMessage(ERRO, "No packets received, server unreachable.")
+	if stats.PacketsSent-stats.PacketsRecv >= 3 {
+		LogMessage(WARN, "watchman.go-WatchPing: Unstable")
 		return false
 	}
 
-	LogMessage(INFO, fmt.Sprintf("Ping successful: %d/%d packets received.\n", stats.PacketsRecv, stats.PacketsSent))
-	LogMessage(INFO, "watchman.go_SendPing done")
+	LogMessage(INFO, "watchman.go-WatchPing: Stable")
 	return true
 }
 
-// CallWatchman はサーバーとの初回ハンドシェイクとトンネル維持監視を行います
-func CallWatchman(serverIP string) {
-	LogMessage(INFO, "watchman.go_CallWatchman. start")
+// handleSocket は "down" を受信したら終了し、"status" を受信したら応答する
+func handleSocket() {
+	LogMessage(INFO, "watchman.go-HandleSocket start")
+	defer LogMessage(INFO, "watchman.go-HandleSocket done")
 
-	// 初回ハンドシェイクを試みる（最大3回の再送）
-	for i := 0; i < 3; i++ {
-		if SendPing(serverIP) {
-			LogMessage(INFO, "Handshake with server successful.")
-			break
-		} else if i == 2 { // 3回目も失敗した場合
-			LogMessage(INFO, "Failed to establish handshake with server after 3 attempts. Exiting.")
-			return
+	listener, err := net.Listen("tcp", "127.0.0.1:3563")
+	if err != nil {
+		LogMessage(ERRO, fmt.Sprintf("Failed to start TCP listener: %v", err))
+		log.Fatal(err)
+	}
+	defer listener.Close()
+
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			LogMessage(ERRO, fmt.Sprintf("Socket accept failed: %v", err))
+			continue
 		}
-		LogMessage(INFO, fmt.Sprintf("Retrying handshake (%d/3)...\n", i+2))
-		time.Sleep(5 * time.Second)
+
+		go func(c net.Conn) {
+			defer c.Close()
+			buf := make([]byte, 1024)
+			n, err := c.Read(buf)
+			if err != nil {
+				LogMessage(ERRO, fmt.Sprintf("Socket read error: %v", err))
+				return
+			}
+
+			message := string(buf[:n])
+			switch message {
+			case "down":
+				LogMessage(INFO, "watchman.go-HandleSocket: Received 'down', exiting")
+				c.Write([]byte("done"))
+				os.Exit(0)
+			case "status":
+				LogMessage(INFO, "watchman.go-HandleSocket: Received 'status', responding 'active'")
+				c.Write([]byte("active"))
+			default:
+				LogMessage(WARN, "watchman.go-HandleSocket: Unknown command received")
+			}
+		}(conn)
+	}
+}
+
+// WatchMan は定期的に ping を実行し、接続が切れた場合に処理を行う
+func WatchMan(svip string) {
+	LogMessage(INFO, "watchman.go-WatchTunnel start")
+	defer LogMessage(INFO, "watchman.go-WatchTunnel stop")
+
+	if !CallWatchman(svip) {
+		LogMessage(ERRO, "watchman.go-WatchTunnel: Initial ping failed")
+		return
 	}
 
-	// 監視ループ開始
-	ticker := time.NewTicker(5 * time.Minute)
+	go handleSocket()
+	ticker := time.NewTicker(1 * time.Minute)
 	defer ticker.Stop()
 
 	for {
 		select {
 		case <-ticker.C:
-			LogMessage(INFO, "Checking server health...")
-			if !SendPing(serverIP) {
-				LogMessage(ERRO, "Server unreachable. Attempting to reset tunnel.")
-				resetTunnel()
-			} else {
-				LogMessage(INFO, "Server is healthy.")
+			if !CallWatchman(svip) {
+				LogMessage(ERRO, "watchman.go-WatchTunnel: Ping failed, restarting tunnel")
+				restartTunnel()
 			}
 		}
 	}
-	LogMessage(INFO, "CallWatch done")
 }
 
-// resetTunnel 関数はトンネルを再起動します
-func resetTunnel() {
-	LogMessage(INFO, "Resetting the tunnel...")
-	err := exec.Command("otdm", "down").Run()
-	if err != nil {
-		fmt.Printf("Failed to execute 'otdm down': %v\n", err)
-		LogMessage(ERRO, fmt.Sprintf("Failed to execute 'otdm down': %v", err))
-	}
-	err = exec.Command("otdm", "up").Run()
-	if err != nil {
-		fmt.Printf("Failed to execute 'otdm up': %v\n", err)
-		LogMessage(ERRO, fmt.Sprintf("Failed to execute 'otdm up': %v", err))
-	}
+// restartTunnel はトンネルを再起動する
+func restartTunnel() {
+	LogMessage(INFO, "Restarting the tunnel...")
 	exec.Command("otdm", "down").Run()
 	exec.Command("otdm", "up").Run()
 }

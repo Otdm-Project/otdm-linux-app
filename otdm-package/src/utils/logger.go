@@ -98,7 +98,7 @@ func rotateLogs() error {
 
 func ErrLogMessage(errMessage string) error {
 	cmd := exec.Command("logger", "-p", "otdm-package", errMessage)
-	fmt.Printf("journal code boot done:\n")
+	//fmt.Printf("journal code boot done:\n")
 	if err := cmd.Run(); err != nil {
 		fmt.Printf("failed to send to journal: %v\n", err)
 	}

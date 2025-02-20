@@ -1,16 +1,16 @@
-// main.go
 package main
 
 import (
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"os/user"
 	"otdm-package/src/commands"
 	"otdm-package/src/utils"
 )
 
-// グローバルにデータを保持する変数宣言
+// グローバル変数
 var (
 	cvIP, svIP, otdmPubKey, domainName, errMessage string
 )
@@ -21,11 +21,11 @@ const Version = "0.0.1"
 func main() {
 	globalFlagSet := flag.NewFlagSet("global", flag.ExitOnError)
 	httpport := globalFlagSet.Int("p", 80, "httpport")
+
 	// rootユーザーか確認
 	usr, err := user.Current()
 	if err != nil {
-		//fmt.Println("Error fetching user info:", err)
-		errMessage := fmt.Sprintf("Error fetching user info:%v", err)
+		errMessage := fmt.Sprintf("Error fetching user info: %v", err)
 		utils.ErrLogMessage(errMessage)
 		os.Exit(1)
 	}
@@ -42,32 +42,37 @@ func main() {
 
 	switch os.Args[1] {
 	case "up":
-		// WebSocketからのデータを受け取る
 		cvIP, svIP, otdmPubKey, domainName, err = commands.RunUp(*httpport)
 		if err != nil {
-			//fmt.Printf("Error during up: %v\n", err)
 			errMessage := fmt.Sprintf("Error during up:%v", err)
 			utils.ErrLogMessage(errMessage)
 		} else {
-
+			// バックグラウンドでWatchmanを起動
+			go utils.CallWatchman(svIP)
 		}
-		utils.CallWatchman(svIP)
 		break
 	case "down":
+		// `watchman` のプロセスを停止
+		exec.Command("pkill", "-f", "otdm-watchman").Run()
+
 		if err := commands.RunDown(); err != nil {
-			//fmt.Println("Error during down:", err)
-			errMessage := fmt.Sprintf("Error during down:%v", err)
-			utils.ErrLogMessage(errMessage)
+			utils.ErrLogMessage(fmt.Sprintf("Error during down:%v", err))
 		}
+
 	case "status":
 		commands.ShowStatus()
+
 	case "version":
 		fmt.Println("otdm version : ", Version)
+
 	case "help":
 		if err := commands.ShowHelp(); err != nil {
 			fmt.Println("Error displaying help:", err)
 		}
+
 	default:
 		fmt.Println("Unknown command:", os.Args[1])
 	}
+
+	select {}
 }
